@@ -50,7 +50,7 @@
             required
           />
           <v-file-input
-            v-model="image"
+            v-model="img"
             :rules="[(v) => !!v || 'Image is required']"
             label="Image"
             outlined
@@ -100,7 +100,7 @@ export default {
       price: "",
       description: "",
       type: "",
-      image: null,
+      img: null,
       valid: false,
     };
   },
@@ -113,7 +113,7 @@ export default {
           price: parseFloat(this.price), // Certifique-se de que o preço é um número
           description: this.description,
           type: this.type,
-          image: this.image ? URL.createObjectURL(this.image) : null,
+          img: this.img ? URL.createObjectURL(this.img) : null,
         };
         console.log("Adding item...", newItem);
         itemStore.addItem(newItem);

@@ -8,7 +8,7 @@
             <div class="cart-table-container">
               <VDataTable
                 :headers="headers"
-                :items="cartStore.cart"
+                :items="cartStore.items"
                 :hide-default-footer="true"
                 fixed-header
               >
@@ -19,7 +19,8 @@
                     </td>
                     <td>{{ item.name }}</td>
                     <td>{{ item.description }}</td>
-                    <td class="price">R${{ item.price }}</td>
+                    <td class="price">R${{ item.price * item.quantity }}</td>
+                    <td>{{ item.quantity }}</td>
                     <td>
                       <transition name="fade">
                         <v-icon
@@ -66,7 +67,7 @@ import {
   VIcon,
   VHover,
 } from "vuetify/components";
-import { cartStore } from "../../store/cartStore";
+import cartStore from "../../store/cartStore";
 
 export default {
   name: "CartList",
@@ -94,11 +95,12 @@ export default {
         { text: "Actions", value: "actions", sortable: false },
       ],
       item: {
-        id: cartStore.cart.id,
-        name: cartStore.cart.name,
-        description: cartStore.cart.description,
-        price: cartStore.cart.price,
-        image: cartStore.img
+        id: cartStore.state.items.id,
+        name: cartStore.state.items.name,
+        description: cartStore.state.items.description,
+        quantity: cartStore.state.items.quantity,
+        price: cartStore.state.items.price,
+        image: cartStore.state.items.img
           ? `/${item.img}`
           : "https://via.placeholder.com/300x200",
       },
@@ -109,7 +111,6 @@ export default {
     removeFromCart(item) {
       // Logic to remove item from cart
       cartStore.removeFromCart(item);
-      delete this.hoverIcons[item.id];
     },
     checkout() {
       // Logic to handle checkout
@@ -127,10 +128,11 @@ export default {
   },
   computed: {
     cartStore() {
-      return cartStore;
+      console.log(cartStore.state);
+      return cartStore.state;
     },
-    formattedPrice() {
-      const price = parseFloat(this.item.price);
+    formattedPrice(p) {
+      const price = parseFloat(p);
       return !isNaN(price) ? price.toFixed(2) : "0.00";
     },
   },

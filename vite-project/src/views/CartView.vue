@@ -6,7 +6,7 @@
 
 <script>
 import { VMain } from "vuetify/components";
-import { cartStore } from "../store/cartStore";
+import cartStore from "../store/cartStore";
 import CartList from "../components/CartList/CartList.vue";
 
 export default {
@@ -25,10 +25,11 @@ export default {
         { text: "Actions", value: "actions", sortable: false },
       ],
       item: {
-        name: cartStore.cart.name,
-        description: cartStore.cart.description,
-        price: cartStore.cart.price,
-        image: cartStore.cart.image,
+        name: cartStore.state.name,
+        description: cartStore.state.description,
+        price: cartStore.state.price,
+        quantity: cartStore.state.quantity,
+        image: cartStore.state.image,
       },
     };
   },

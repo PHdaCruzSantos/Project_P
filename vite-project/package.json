@@ -5,18 +5,30 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit",
+    "start": "ts-node src/index.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.34.1",
+    "express": "^4.21.1",
     "vue": "^3.4.37",
     "vue-router": "^4.4.5",
     "vuetify": "^3.7.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.1.2",
-    "vite": "^5.4.1"
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.5",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.1",
+    "vue-tsc": "^2.1.6"
   }
 }

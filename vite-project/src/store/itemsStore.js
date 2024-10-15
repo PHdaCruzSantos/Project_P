@@ -111,10 +111,6 @@ const getItemsByType = (type) => {
   return state.items.filter((item) => item.tipo === type);
 };
 
-const getImages = () => {
-  return require.context("../assets/images/items", false, /\.png$/);
-};
-
 export default {
   state,
   addItem,
