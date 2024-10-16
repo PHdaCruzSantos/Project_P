@@ -1,4 +1,9 @@
 # Local env files
 .env
+.env.local
 .env.*
-!.env.example
+
+# Ignore .env file in backend folder
+/backend/.env
+/backend/.env.local
+/backend/.env.*
