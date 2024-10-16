@@ -35,6 +35,7 @@
 
 <script>
 import ItemCard from "../ItemCard/ItemsCard.vue";
+import useDataBase from "../../utils/useDatabase.js";
 import {
   VPagination,
   VCol,
@@ -45,16 +46,27 @@ import {
 } from "vuetify/components";
 import "vuetify/dist/vuetify.min.css";
 
-import useDataBase from "../../utils/useDatabase.js";
-
-
 export default {
   name: "ItemList",
   data() {
     return {
-      items: [],
+      items: [], // Remover ref(), pois `data()` já torna a variável reativa
       currentPage: 1,
+      selectedType: 'All', // Filtro adicionado
     };
+  },
+  computed: {
+    paginatedItems() {
+      // Apenas para lidar com paginação, exemplo básico
+      const itemsPerPage = 3;
+      const startIndex = (this.currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return this.items.slice(startIndex, endIndex);
+    },
+    totalPages() {
+      const itemsPerPage = 3;
+      return Math.ceil(this.items.length / itemsPerPage);
+    },
   },
   components: {
     ItemCard,
@@ -65,25 +77,19 @@ export default {
     VSelect,
     VBtn,
   },
-  watch: {
-    "itemsStore.state.items": {
-      handler() {
-        this.updateItems();
-      },
-      deep: true,
-    },
-  },
   methods: {
-    async updateItems() {
+    async loadItemsFromDatabase() {
       try {
-        const items = await useDataBase.getItems();
-        this.items = items.map((item) => ({
-          ...item,
-          img: item.img ? `${item.img}` : "https://via.placeholder.com/300x200",
-          price: parseFloat(item.price).toFixed(2),
-        }));
+        const res = await useDataBase.getItems();
+        this.items = res.map((item) => {
+          return {
+            ...item,
+            price: parseFloat(item.price).toFixed(2), // Garantir o formato do preço
+          };
+        });
+        console.log("Itens carregados do banco de dados:", this.items);
       } catch (error) {
-        console.error("Erro ao buscar itens do banco de dados:", error);
+        console.error("Erro ao carregar itens do banco de dados:", error);
       }
     },
     handleAddToCart(item) {
@@ -94,8 +100,13 @@ export default {
     },
   },
   async mounted() {
-    await this.updateItems();
-    console.log("Itens carregados do banco de dados:", this.items);
+    await this.loadItemsFromDatabase();
   },
 };
 </script>
+
+<style scoped>
+.v-card {
+  margin-bottom: 20px;
+}
+</style>
