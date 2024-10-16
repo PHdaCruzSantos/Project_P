@@ -1,0 +1,7 @@
+# Local 
+.env
+.env.*
+
+/backend/node_modules
+/bacend/.env
+/bacend/.env.*
