@@ -9,7 +9,7 @@
     <v-img
       @load="handleImageLoad"
       @error="handleImageLoadError"
-      :src="imageSrc"
+      :src="item.image_url"
       :alt="item.name"
       width="200"
       height="200"
@@ -84,11 +84,11 @@ export default {
         }
       }
     },
-    handleImageLoadError(event) {
-      if (event && event.target) {
-        event.target.src = "https://via.placeholder.com/300x200";
-      }
-    },
+    // handleImageLoadError(event) {
+    //   if (event && event.target) {
+    //     event.target.src = "https://via.placeholder.com/300x200";
+    //   }
+    // },
     toggleEdit() {
       this.isEditing = !this.isEditing; // Alterna entre mostrar/ocultar editor
     },
