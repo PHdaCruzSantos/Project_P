@@ -30,4 +30,14 @@ const deleteItem = async (id) => {
   }
 };
 
-export default { getItems, setItem, deleteItem };
+const uploadFile = async (file) => {
+  const response = await fetch(`${API_URL}/upload`, {
+    method: "POST",
+    body: new FormData().append("file", file),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to upload file");
+  }
+};
+
+export default { getItems, setItem, deleteItem, uploadFile };

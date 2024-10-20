@@ -9,7 +9,7 @@
     <v-img
       @load="handleImageLoad"
       @error="handleImageLoadError"
-      :src="item.image_url"
+      :src="`@upload/${item.image_url}`"
       :alt="item.name"
       width="200"
       height="200"
@@ -33,6 +33,8 @@
 
 <script>
 import EditItem from "../EditItem/EditItem.vue";
+// import "module-alias/register";
+
 import {
   VCard,
   VCardTitle,
@@ -99,8 +101,8 @@ export default {
       return !isNaN(price) ? price.toFixed(2) : "0.00";
     },
     imageSrc() {
-      console.log(this.item.img);
-      return this.item.img || "https://via.placeholder.com/300x200";
+      console.log(this.item.image_url);
+      return this.item.image_url || "https://via.placeholder.com/300x200";
     },
   },
 };

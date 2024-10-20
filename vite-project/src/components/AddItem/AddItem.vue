@@ -66,6 +66,10 @@
 </template>
 
 <script>
+import useDataBase from "../../utils/useDatabase.js";
+// import { uploadImage } from "../../utils/useUploadImg.js";
+
+
 import {
   VMain,
   VCard,
@@ -78,7 +82,6 @@ import {
   VBtn,
   VForm,
 } from "vuetify/components";
-import itemStore from "../../store/itemsStore";
 
 export default {
   name: "AddItem",
@@ -100,7 +103,7 @@ export default {
       price: "",
       description: "",
       type: "",
-      img: null,
+      image_url: null,
       valid: false,
     };
   },
@@ -108,15 +111,15 @@ export default {
     addItem() {
       if (this.$refs.form.validate()) {
         const newItem = {
-          id: Date.now(),
           name: this.name,
           price: parseFloat(this.price), // Certifique-se de que o preço é um número
           description: this.description,
           type: this.type,
-          img: this.img ? URL.createObjectURL(this.img) : null,
+          image_url: this.img ? this.img.name : "https://via.placeholder.com/300x200",
         };
         console.log("Adding item...", newItem);
-        itemStore.addItem(newItem);
+        useDataBase.setItem(newItem);
+        // useDataBase.uploadFile(this.img);
         console.log("Item added successfully!", newItem);
         this.$router.push({ name: "Home" });
       }

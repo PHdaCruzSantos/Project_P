@@ -2,7 +2,12 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@upload/": ["src/upload/"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

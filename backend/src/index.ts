@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "module-alias/register";
 import express from "express";
 import cors from "cors";
 import { drizzle } from "drizzle-orm/libsql"; // Replace with the actual library name
@@ -10,6 +11,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "@upload");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  console.log("POST upload", req);
+  res.send("File uploaded successfully");
+});
+
 const db = drizzle(
   createClient({
     url: process.env.TURSO_DATABASE_URL,
@@ -19,11 +38,16 @@ const db = drizzle(
 
 app.get("/items", async (req, res) => {
   const items = await db.select().from(itemsTable).all();
-  res.json(items);
+  const i = items.map((item) => ({
+    ...item,
+    image_url: `@uploads/${item.image_url}`,
+  }));
+  res.json(i);
 });
 
 app.post("/items", async (req, res) => {
   const item = req.body;
+  console.log("POST item", item);
   await db.insert(itemsTable).values(item);
   res.status(201).send();
 });
