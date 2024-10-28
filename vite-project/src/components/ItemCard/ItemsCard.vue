@@ -6,10 +6,13 @@
     rounded="lg"
     border="primary sm opacity-100"
   >
+  <v-btn icon variant="text" class="delete-btn" @click="deleteItem(item.id)">
+    <v-icon>mdi-delete</v-icon>
+  </v-btn>
     <v-img
       @load="handleImageLoad"
       @error="handleImageLoadError"
-      :src="`@upload/${item.image_url}`"
+      :src="`${URL_BACKEND}/upload/${this.item.image_url}` "
       :alt="item.name"
       width="200"
       height="200"
@@ -32,6 +35,7 @@
 </template>
 
 <script>
+import cartStore from "../../store/cartStore";
 import EditItem from "../EditItem/EditItem.vue";
 // import "module-alias/register";
 
@@ -45,13 +49,14 @@ import {
   VImg,
   VIcon,
 } from "vuetify/components";
-import cartStore from "../../store/cartStore";
+import useDataBase from '../../utils/useDatabase';
 
 export default {
   name: "ItemsCard",
   data() {
     return {
       isEditing: false,
+      URL_BACKEND: import.meta.env.VITE_API_URL_BACKEND
     };
   },
   components: {
@@ -86,11 +91,15 @@ export default {
         }
       }
     },
-    // handleImageLoadError(event) {
-    //   if (event && event.target) {
-    //     event.target.src = "https://via.placeholder.com/300x200";
-    //   }
-    // },
+    deleteItem(id) {
+      useDataBase.deleteItem(id);
+      this.$emit("deleteItem", id);
+    },
+    handleImageLoadError(event) {
+      if (event && event.target) {
+        event.target.src = "https://via.placeholder.com/300x200";
+      }
+    },
     toggleEdit() {
       this.isEditing = !this.isEditing; // Alterna entre mostrar/ocultar editor
     },
@@ -102,8 +111,17 @@ export default {
     },
     imageSrc() {
       console.log(this.item.image_url);
+      console.log("021", `http://localhost:3000/upload/${this.item.image_url}`)
       return this.item.image_url || "https://via.placeholder.com/300x200";
     },
   },
 };
 </script>
+
+<style scoped>
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+</style>

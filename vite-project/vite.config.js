@@ -1,19 +1,26 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath, URL } from "node:url";
 import path from "path";
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  define: {
-    "process.env": {},
-  },
-  plugins: [vue()],
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL(".src/", import.meta.url)),
-      "@backend": path.resolve(__dirname, "./backend/src"),
-      "@upload": path.resolve(__dirname, "./backend/src/upload"),
+// Carregar variáveis de ambiente
+export default defineConfig(({ mode }) => {
+  // Carregar variáveis de ambiente com base no modo (development, production, etc.)
+  const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    define: {
+      "process.env": {
+        API_URL_BACKEND: JSON.stringify(env.VITE_API_URL_BACKEND),
+      },
     },
-  },
+    plugins: [vue()],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("./src/", import.meta.url)),
+        "@backend": path.resolve(__dirname, "./backend/src"),
+        "@upload": path.resolve(__dirname, "./backend/@upload"),
+      },
+    },
+  };
 });

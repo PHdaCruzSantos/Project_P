@@ -15,7 +15,7 @@
     </v-row>
     <v-row>
       <v-col cols="12" md="4" v-for="item in paginatedItems" :key="item.id">
-        <ItemCard :item="item" @add-to-cart="handleAddToCart" />
+        <ItemCard :item="item" @add-to-cart="handleAddToCart" @deleteItem="handleItemDelete" />
       </v-col>
     </v-row>
     <v-row>
@@ -52,20 +52,19 @@ export default {
     return {
       items: [], // Remover ref(), pois `data()` já torna a variável reativa
       currentPage: 1,
+      itemsPerPage: 3,
       selectedType: 'All', // Filtro adicionado
     };
   },
   computed: {
     paginatedItems() {
       // Apenas para lidar com paginação, exemplo básico
-      const itemsPerPage = 3;
-      const startIndex = (this.currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
       return this.items.slice(startIndex, endIndex);
     },
     totalPages() {
-      const itemsPerPage = 3;
-      return Math.ceil(this.items.length / itemsPerPage);
+      return Math.ceil(this.items.length / this.itemsPerPage);
     },
   },
   components: {
@@ -97,6 +96,9 @@ export default {
     },
     handlePageChange(page) {
       this.currentPage = page;
+    },
+    handleItemDelete(id) {
+      this.items = this.items.filter((item) => item.id !== id);
     },
   },
   async mounted() {

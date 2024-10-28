@@ -103,7 +103,7 @@ export default {
       price: "",
       description: "",
       type: "",
-      image_url: null,
+      img: null,
       valid: false,
     };
   },
@@ -119,7 +119,7 @@ export default {
         };
         console.log("Adding item...", newItem);
         useDataBase.setItem(newItem);
-        // useDataBase.uploadFile(this.img);
+        useDataBase.uploadFile(this.img);
         console.log("Item added successfully!", newItem);
         this.$router.push({ name: "Home" });
       }

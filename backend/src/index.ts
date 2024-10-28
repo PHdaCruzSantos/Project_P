@@ -24,9 +24,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.post("/upload", upload.single("file"), (req, res) => {
+app.post('/upload', upload.single("file"), (req, res) => {
   console.log("POST upload", req);
   res.send("File uploaded successfully");
+});
+
+app.use('/upload', express.static("@upload"));
+
+app.get('/upload', (req, res) => {
+  res.send('Pasta de uploads acessível');
 });
 
 const db = drizzle(
@@ -38,11 +44,7 @@ const db = drizzle(
 
 app.get("/items", async (req, res) => {
   const items = await db.select().from(itemsTable).all();
-  const i = items.map((item) => ({
-    ...item,
-    image_url: `@uploads/${item.image_url}`,
-  }));
-  res.json(i);
+  res.json(items);
 });
 
 app.post("/items", async (req, res) => {
