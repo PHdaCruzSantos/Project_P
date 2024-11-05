@@ -27,7 +27,7 @@ const getImages = async (img) => {
   if (!response.ok) {
     throw new Error("Failed to fetch images");
   }
-}
+};
 
 const deleteItem = async (id) => {
   const response = await fetch(`${apiUrl}/items/${id}`, {
@@ -49,23 +49,49 @@ const uploadFile = async (file) => {
     throw new Error("Failed to upload file");
   }
   console.log("File uploaded");
-  
 };
 
 const saveOrUpdateUser = async (user) => {
   const response = await fetch(`${apiUrl}/users`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(user),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to save or update user');
+    throw new Error("Failed to save or update user");
   }
 
   return await response.json();
 };
 
-export default { getItems, setItem, deleteItem, uploadFile, getImages, saveOrUpdateUser };
+// GET: login user
+const loginUser = async (user) => {
+  const response = await fetch(`${apiUrl}/users/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(user),
+  });
+  console.log("BODY", user);
+
+  if (!response.ok) {
+    throw new Error("Failed to login user");
+  }
+
+  console.log("RESPONSE", response.body);
+  return await response.json();
+};
+
+export default {
+  getItems,
+  setItem,
+  deleteItem,
+  uploadFile,
+  getImages,
+  saveOrUpdateUser,
+  loginUser,
+};

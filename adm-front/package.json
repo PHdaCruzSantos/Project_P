@@ -19,6 +19,7 @@
     "drizzle-orm": "^0.34.1",
     "express": "^4.21.1",
     "module-alias": "^2.2.3",
+    "pinia": "^2.2.6",
     "vue": "^3.4.37",
     "vue-clerk": "^0.7.0",
     "vue-router": "^4.4.5",

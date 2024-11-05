@@ -5,7 +5,7 @@ import cors from "cors";
 import { drizzle } from "drizzle-orm/libsql"; // Certifique-se de substituir pelo nome correto da biblioteca
 import { createClient } from "@libsql/client/http"; // Certifique-se de substituir pelo nome correto da biblioteca
 import { itemsTable, storesTable, usersTable } from "./db/schema"; // Inclui as novas tabelas
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
 const app = express();
@@ -25,15 +25,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.post('/upload', upload.single("file"), (req, res) => {
+app.post("/upload", upload.single("file"), (req, res) => {
   console.log("POST upload", req);
   res.send("File uploaded successfully");
 });
 
-app.use('/upload', express.static("@upload"));
+app.use("/upload", express.static("@upload"));
 
-app.get('/upload', (req, res) => {
-  res.send('Pasta de uploads acessível');
+app.get("/upload", (req, res) => {
+  res.send("Pasta de uploads acessível");
 });
 
 // Configuração do banco de dados
@@ -80,6 +80,16 @@ app.get("/users/:id", async (req, res) => {
   const user = await db.select().from(usersTable).where(eq(usersTable.id, id));
   res.json(user);
 });
+// GET: Login de usuário
+app.post("/users/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = await db
+    .select()
+    .from(usersTable)
+    .where(and(eq(usersTable.email, email), eq(usersTable.password, password)));
+
+  res.json(user);
+});
 
 // POST: Criar um novo usuário
 app.post("/users", async (req, res) => {
@@ -122,18 +132,24 @@ app.delete("/stores/:id", async (req, res) => {
 // GET: Obter todas as lojas de um usuário específico
 app.get("/users/:userId/stores", async (req, res) => {
   const { userId } = req.params;
-  const stores = await db.select().from(storesTable).where(eq(storesTable.user_id, userId)).all();
+  const stores = await db
+    .select()
+    .from(storesTable)
+    .where(eq(storesTable.user_id, userId))
+    .all();
   res.json(stores);
 });
 
 // GET: Obter todos os itens de uma loja específica
 app.get("/stores/:storeId/items", async (req, res) => {
   const { storeId } = req.params;
-  const items = await db.select().from(itemsTable).where(eq(itemsTable.store_id, storeId)).all();
+  const items = await db
+    .select()
+    .from(itemsTable)
+    .where(eq(itemsTable.store_id, storeId))
+    .all();
   res.json(items);
 });
-
-
 
 // Inicialização do servidor
 app.listen(3000, () => {
@@ -216,6 +232,4 @@ async function testDataGenerate() {
     store_id: store2Id,
     image_names: "10.png,11.png,12.png",
   });
-
 }
-

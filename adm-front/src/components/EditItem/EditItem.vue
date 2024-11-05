@@ -49,7 +49,7 @@ import {
   VBtn,
   VImg,
 } from "vuetify/components";
-import itemsStore from "../../store/itemsStore";
+import itemsStore from "../../stores/itemsStore";
 export default {
   name: "EditItem",
   components: {

@@ -6,19 +6,25 @@
     rounded="lg"
     border="primary sm opacity-100"
   >
-  <v-btn icon variant="text" class="delete-btn" @click="deleteItem(item.id)">
-    <v-icon>mdi-delete</v-icon>
-  </v-btn>
-  <v-carousel :show-arrows="false" progress="primary" hide-delimiters height="200" cycle>
-    <v-carousel-item v-for="(image, index) in imageSrc" :key="index">
-      <v-img
-        :src="`${URL_BACKEND}/upload/${image}`"
-        @load="handleImageLoad"
-        @error="handleImageLoadError"
-        aspect-ratio="1"
-      />
-    </v-carousel-item>
-  </v-carousel>
+    <v-btn icon variant="text" class="delete-btn" @click="deleteItem(item.id)">
+      <v-icon>mdi-delete</v-icon>
+    </v-btn>
+    <v-carousel
+      :show-arrows="false"
+      progress="primary"
+      hide-delimiters
+      height="200"
+      cycle
+    >
+      <v-carousel-item v-for="(image, index) in imageSrc" :key="index">
+        <v-img
+          :src="`${URL_BACKEND}/upload/${image}`"
+          @load="handleImageLoad"
+          @error="handleImageLoadError"
+          aspect-ratio="1"
+        />
+      </v-carousel-item>
+    </v-carousel>
     <v-card-title>{{ item.name }}</v-card-title>
     <v-card-subtitle>R$ {{ formattedPrice }}</v-card-subtitle>
     <v-card-text>{{ item.description }}</v-card-text>
@@ -34,7 +40,7 @@
 </template>
 
 <script>
-import cartStore from "../../store/cartStore";
+import cartStore from "../../stores/cartStore";
 import EditItem from "../EditItem/EditItem.vue";
 // import "module-alias/register";
 
@@ -50,14 +56,14 @@ import {
   VCarousel,
   VCarouselItem,
 } from "vuetify/components";
-import useDataBase from '../../utils/useDatabase';
+import useDataBase from "../../utils/useDatabase";
 
 export default {
   name: "ItemsCard",
   data() {
     return {
       isEditing: false,
-      URL_BACKEND: import.meta.env.VITE_API_URL_BACKEND
+      URL_BACKEND: import.meta.env.VITE_API_URL_BACKEND,
     };
   },
   components: {
@@ -71,7 +77,7 @@ export default {
     VIcon,
     VCarousel,
     VCarouselItem,
-    EditItem
+    EditItem,
   },
   props: {
     item: {
@@ -83,7 +89,7 @@ export default {
     addToCart() {
       // Action to add the item to the cart
       cartStore.addToCart(this.item);
-      console.log(this.item);
+      // console.log(this.item);
     },
     handleImageLoad(event) {
       // Verifica se o event.target existe antes de acessar suas propriedades
@@ -114,8 +120,11 @@ export default {
     },
     imageSrc() {
       // split the image names and get the first one
-      console.log("IMG", this.item.image_names.split(",")[0]);
-      console.log("021", `http://localhost:3000/upload/${this.item.image_names}`)
+      // console.log("IMG", this.item.image_names.split(",")[0]);
+      // console.log(
+      //   "021",
+      //   `http://localhost:3000/upload/${this.item.image_names}`
+      // );
       let images = this.item.image_names.split(",");
       return images;
     },
