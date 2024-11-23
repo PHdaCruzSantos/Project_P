@@ -25,6 +25,16 @@ interface Store {
   created_at: Date;
 }
 
+const getStore = async (storeId: string) => {
+  const retStore = await db
+    .select()
+    .from(storesTable)
+    .where(eq(storesTable.id, storeId))
+    .get();
+
+  return retStore;
+};
+
 const addStore = async (user_id: string, store: Store) => {
   // const validUser = await db
   //   .select()
@@ -100,4 +110,11 @@ const desativeStore = async (storeId: string) => {
   return retStore.rowsAffected;
 };
 
-export default { getStores, addStore, updateStore, deleteStore, desativeStore };
+export default {
+  getStores,
+  addStore,
+  updateStore,
+  deleteStore,
+  desativeStore,
+  getStore,
+};

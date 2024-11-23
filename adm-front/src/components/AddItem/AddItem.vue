@@ -4,8 +4,10 @@
       <v-card class="elevation-3 mx-auto" max-width="800px">
         <!-- Título -->
         <v-card-title class="text-h5 font-weight-bold">
-          <v-icon color="blue darken-2" left>mdi-plus-box</v-icon>
-          Add New Item
+          <v-icon @click="goBack" :style="{ color: palette.lightblue[300] }">
+            mdi-arrow-left
+          </v-icon>
+          Add New Item into <span class="text-primary">{{ storeName }}</span>
         </v-card-title>
 
         <v-divider></v-divider>
@@ -197,6 +199,9 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import itemsApi from "../../utils/api/items";
+import storesApi from "../../utils/api/stores";
+import { useRouter } from "vue-router";
+import palette from "../../../palette";
 import {
   VMain,
   VContainer,
@@ -260,6 +265,12 @@ export default {
     const categoriesObj = ref({});
     const statuses = ref(["active", "inactive"]);
 
+    const storeName = ref("");
+    const storeDescription = ref("");
+    const storeImage = ref("");
+    const storeStatus = ref("");
+
+    const router = useRouter();
     const fetchCategories = async () => {
       try {
         const response = await itemsApi.getAllCategories();
@@ -268,6 +279,19 @@ export default {
         console.log("categories", categories.value);
       } catch (error) {
         console.error("Failed to fetch categories:", error);
+      }
+    };
+    const fatchStoreInfos = async () => {
+      try {
+        const response = await storesApi.getStore(props.storeId);
+        storeName.value = response.name;
+        storeDescription.value = response.description;
+        storeImage.value = response.image;
+        storeStatus.value = response.status;
+
+        console.log("storeInfos", response);
+      } catch (error) {
+        console.error("Failed to fetch store infos:", error);
       }
     };
     const handleImageChange = () => {
@@ -288,7 +312,11 @@ export default {
       types.value = "";
       category.value = "";
       images.value = [];
-      status.value = "available";
+      status.value = "active";
+    };
+
+    const goBack = () => {
+      router.go(-1);
     };
 
     const handleSubmit = async () => {
@@ -328,7 +356,10 @@ export default {
       images.value.splice(index, 1);
     };
 
-    onMounted(fetchCategories);
+    onMounted(() => {
+      fetchCategories();
+      fatchStoreInfos();
+    });
 
     return {
       valid,
@@ -342,12 +373,19 @@ export default {
       types,
       categories,
       statuses,
+      imagePreviews,
+      storeName,
+      storeDescription,
+      storeImage,
+      storeStatus,
+
+      palette,
       handleSubmit,
       clearForm,
-      imagePreviews,
       removeImage,
       addImage,
       handleImageChange,
+      goBack,
     };
   },
 };

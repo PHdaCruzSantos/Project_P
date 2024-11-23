@@ -14,6 +14,20 @@ const getStores = async (userId) => {
   return await response.json();
 };
 
+const getStore = async (storeId) => {
+  const response = await fetch(`${apiUrl}/api/store/${storeId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch store");
+  }
+  return await response.json();
+};
+
 const addStore = async (userId, store) => {
   const response = await fetch(`${apiUrl}/api/stores/create/${userId}`, {
     method: "POST",
@@ -86,4 +100,5 @@ export default {
   updateStore,
   desativeStore,
   deleteStore,
+  getStore,
 };

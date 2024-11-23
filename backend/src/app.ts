@@ -3,7 +3,6 @@ import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import path from "path";
 
 import authRouter from "./routes/authRoutes";
 import userRouter from "./routes/userRoutes";
@@ -25,8 +24,8 @@ app.use(
   })
 );
 
-app.use(express.json());
 app.use(cookieParser());
+app.use(express.json());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

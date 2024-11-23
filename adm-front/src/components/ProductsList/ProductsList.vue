@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container v-if="isLoggedIn && !isLoading">
     <v-toolbar
       :color="palette.slategray[700]"
       flat
@@ -22,17 +22,9 @@
         <span>Add a new store</span>
       </v-tooltip>
     </v-toolbar>
-    <v-row
-      v-if="isLoggedIn && !isLoading"
-      v-for="store in stores"
-      :key="store.id"
-      class="mb-4"
-    >
+    <v-row v-for="store in stores" :key="store.id" class="mb-4">
       <v-col cols="12">
         <v-card :color="palette.slategray[300]" class="elevation-3">
-          <!-- Cabeçalho da Loja -->
-          <v-card-title> </v-card-title>
-
           <!-- Tabela de Itens -->
           <v-card-text>
             <v-toolbar
@@ -40,11 +32,20 @@
               flat
               class="d-flex justify-around align-center mb-4 border-radius rounded px-2 elevation-3"
             >
+              <v-col cols="1">
+                <v-avatar
+                  :image="`${URL_BACKEND}/upload/images/${store.logo}`"
+                  size="50"
+                  class="rounded-circle"
+                >
+                  <!-- Fallback caso a imagem não carregue -->
+                  <template v-slot:placeholder>
+                    <v-icon size="large">mdi-store</v-icon>
+                  </template>
+                </v-avatar>
+              </v-col>
               <v-row class="align-center">
-                <v-col cols="6">
-                  <v-icon class="pr-2">mdi-store</v-icon>
-                </v-col>
-                <v-col cols="6">
+                <v-col cols="5">
                   <div class="text-h6">{{ store.name }}</div>
                   <div class="text-subtitle-1 text-secondary">
                     {{ store.address }}
@@ -237,6 +238,7 @@ import {
   VSwitch,
   VProgressCircular,
   VHover,
+  VAvatar,
 } from "vuetify/components";
 import palette from "../../../palette";
 
@@ -261,6 +263,7 @@ export default {
     VSwitch,
     VProgressCircular,
     VHover,
+    VAvatar,
   },
   setup() {
     const storesStore = useStoresStore();
@@ -271,6 +274,7 @@ export default {
     const expandedItems = ref([]);
     const isLoading = ref(true);
     const loadingSwitch = ref({}); // Track switch loaders for items
+    const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
 
     const headers = [
       { text: "Name", value: "name" },
@@ -285,6 +289,7 @@ export default {
         const storesData = storesStore.stores;
         for (const store of storesData) {
           const itemsResponse = await itemsApi.getItemsInStore(store.id);
+          console.log(store.logo);
           for (const item of itemsResponse) {
             const variantsResponse = await itemsApi.getAllVariantsItem(item.id);
             item.variants = variantsResponse;
@@ -361,6 +366,7 @@ export default {
       addStore,
       palette,
       editStore,
+      URL_BACKEND,
     };
   },
 };

@@ -12,9 +12,24 @@ export const getStores = async (req: Request, res: Response) => {
   }
 };
 
+export const getStore = async (req: Request, res: Response) => {
+  try {
+    const storeId = req.params.storeId;
+    const store = await storesServices.getStore(storeId);
+
+    if (!store) {
+      throw new Error("Store not found");
+    }
+
+    res.status(200).json(store);
+  } catch (error) {
+    res.status(404).json({ message: error });
+  }
+};
+
 export const addStore = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId;
     const store = req.body;
     const newStore = await storesServices.addStore(userId, store);
 
@@ -30,13 +45,9 @@ export const addStore = async (req: Request, res: Response) => {
 
 export const updateStore = async (req: Request, res: Response) => {
   try {
-    const storeId = req.params; //NOTE - Better use req.path.split("/")[3] instead of req.params.storeId
+    const storeId = req.params.storeId; //NOTE - Better use req.path.split("/")[3] instead of req.params.storeId
     const store = req.body;
-    console.log(store);
-    const updatedStore = await storesServices.updateStore(
-      String(storeId),
-      store
-    );
+    const updatedStore = await storesServices.updateStore(storeId, store);
     if (!updatedStore) {
       throw new Error("Store not found");
     }
@@ -49,7 +60,7 @@ export const updateStore = async (req: Request, res: Response) => {
 
 export const deleteStore = async (req: Request, res: Response) => {
   try {
-    const { storeId } = req.params;
+    const storeId = req.params.storeId;
     const deletedStore = await storesServices.deleteStore(storeId);
     if (!deletedStore) {
       throw new Error("Store not found");
@@ -63,7 +74,7 @@ export const deleteStore = async (req: Request, res: Response) => {
 
 export const desativeStore = async (req: Request, res: Response) => {
   try {
-    const { storeId } = req.params;
+    const storeId = req.params.storeId;
     const desativeStore = await storesServices.desativeStore(storeId);
 
     res.status(200).json(desativeStore);

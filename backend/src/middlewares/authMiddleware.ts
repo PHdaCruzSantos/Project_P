@@ -17,9 +17,7 @@ export const authMiddleware = (
   next: NextFunction
 ): void => {
   try {
-    const token: string | undefined =
-      req.cookies?.access_token || req.headers.authorization?.split(" ")[1];
-
+    const token = req.cookies?.access_token;
     if (!token) {
       res.status(401).json({ message: "Token não fornecido" });
       return;
