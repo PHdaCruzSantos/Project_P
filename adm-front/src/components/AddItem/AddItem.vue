@@ -1,133 +1,371 @@
 <template>
-  <v-main
-    class="d-flex justify-center align-center"
-    style="
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-    "
-  >
-    <v-card style="width: 400px; padding: 20px">
-      <v-card-title> Add Item </v-card-title>
-      <v-card-text>
-        <v-form ref="form" v-model="valid" lazy-validation>
-          <v-text-field
-            v-model="name"
-            :rules="[(v) => !!v || 'Name is required']"
-            label="Name"
-            outlined
-            required
-          />
-          <v-text-field
-            v-model="price"
-            :rules="[
-              (v) => !!v || 'Price is required',
-              (v) =>
-                /^\d+(\.\d{1,2})?$/.test(v) || 'Price must be a valid number',
-            ]"
-            label="Price (R$)"
-            outlined
-            required
-          />
-          <v-text-field
-            v-model="description"
-            :rules="[
-              (v) => !!v || 'Description is required',
-              (v) =>
-                v.length <= 20 || 'Description must be less than 20 characters',
-            ]"
-            label="Description"
-            outlined
-            required
-          />
-          <v-select
-            v-model="type"
-            :items="['A', 'B']"
-            :rules="[(v) => !!v || 'Type is required']"
-            label="Type"
-            outlined
-            required
-          />
-          <v-file-input
-            v-model="img"
-            :rules="[(v) => !!v || 'Image is required']"
-            label="Image"
-            outlined
-            required
-          />
-        </v-form>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="addItem" :disabled="!valid" color="primary"> Add </v-btn>
-      </v-card-actions>
-    </v-card>
+  <v-main class="d-flex justify-center align-center" style="height: 100%">
+    <v-container>
+      <v-card class="elevation-3 mx-auto" max-width="800px">
+        <!-- Título -->
+        <v-card-title class="text-h5 font-weight-bold">
+          <v-icon color="blue darken-2" left>mdi-plus-box</v-icon>
+          Add New Item
+        </v-card-title>
+
+        <v-divider></v-divider>
+
+        <!-- Formulário -->
+        <v-card-text>
+          <v-form ref="form" v-model="valid" lazy-validation>
+            <!-- Nome -->
+            <v-text-field
+              v-model="name"
+              :rules="[(v) => !!v || 'Name is required']"
+              label="Item Name"
+              variant="outlined"
+              dense
+              class="styled-input"
+              required
+            >
+              <template #prepend>
+                <v-icon color="blue">mdi-tag</v-icon>
+              </template>
+            </v-text-field>
+
+            <!-- Descrição -->
+            <v-text-field
+              v-model="description"
+              :rules="[(v) => !!v || 'Description is required']"
+              label="Description"
+              variant="outlined"
+              dense
+              class="styled-input"
+              required
+            >
+              <template #prepend>
+                <v-icon color="blue">mdi-text-box</v-icon>
+              </template>
+            </v-text-field>
+
+            <v-row>
+              <!-- Preço -->
+              <v-col cols="6">
+                <v-text-field
+                  v-model="price"
+                  :rules="[
+                    (v) => !!v || 'Price is required',
+                    (v) =>
+                      /^\d+(\.\d{1,2})?$/.test(v) ||
+                      'Price must be a valid number',
+                  ]"
+                  label="Price (R$)"
+                  variant="outlined"
+                  dense
+                  clearable
+                  class="styled-input"
+                  required
+                >
+                  <template #prepend>
+                    <v-icon color="blue">mdi-currency-usd</v-icon>
+                  </template>
+                </v-text-field>
+              </v-col>
+              <!-- Type -->
+              <v-col cols="6">
+                <v-select
+                  v-model="type"
+                  :items="types"
+                  :rules="[(v) => !!v || 'Type is required']"
+                  label="Type"
+                  variant="outlined"
+                  dense
+                  class="styled-input"
+                  required
+                >
+                  <template #prepend>
+                    <v-icon color="blue">mdi-food</v-icon>
+                  </template>
+                </v-select>
+              </v-col>
+            </v-row>
+
+            <!-- Inputs lado a lado -->
+            <v-row>
+              <!-- Categoria -->
+              <v-col cols="6">
+                <v-select
+                  v-model="category"
+                  :items="categories"
+                  :rules="[(v) => !!v || 'Category is required']"
+                  label="Category"
+                  variant="outlined"
+                  dense
+                  class="styled-input"
+                  required
+                >
+                  <template #prepend>
+                    <v-icon color="blue">mdi-shape</v-icon>
+                  </template>
+                </v-select>
+              </v-col>
+
+              <!-- Status -->
+              <v-col cols="6">
+                <v-select
+                  v-model="status"
+                  :items="statuses"
+                  :rules="[(v) => !!v || 'Status is required']"
+                  label="Status"
+                  variant="outlined"
+                  dense
+                  class="styled-input"
+                  required
+                >
+                  <template #prepend>
+                    <v-icon color="blue">mdi-check-circle</v-icon>
+                  </template>
+                </v-select>
+              </v-col>
+            </v-row>
+
+            <!-- Imagens -->
+            <v-file-input
+              v-model="images"
+              multiple
+              :rules="[(v) => v.length > 0 || 'At least one image is required']"
+              label="Upload Images"
+              variant="outlined"
+              dense
+              class="styled-input"
+              required
+            >
+              <template #prepend>
+                <v-icon color="blue">mdi-image-multiple</v-icon>
+              </template>
+              <template v-slot:selection="{ fileNames }">
+                <v-chip
+                  v-for="fileName in fileNames"
+                  :key="fileName"
+                  class="me-2"
+                  color="primary"
+                  size="small"
+                  label
+                >
+                  {{ fileName }}
+                </v-chip>
+              </template>
+            </v-file-input>
+
+            <!-- Visualização das Imagens -->
+            <v-row v-if="imagePreviews.length" class="mt-4">
+              <v-col cols="12" class="text-center">
+                <div class="preview-container">
+                  <v-row dense>
+                    <v-col
+                      v-for="(preview, index) in imagePreviews"
+                      :key="index"
+                      cols="4"
+                    >
+                      <v-img
+                        :src="preview"
+                        aspect-ratio="16/9"
+                        contain
+                        class="mb-2"
+                      ></v-img>
+                      <v-btn small text color="red" @click="removeImage(index)">
+                        Remove
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <!-- Ações -->
+        <v-card-actions>
+          <v-btn color="grey darken-1" text @click="clearForm"> Clear </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="!valid" color="blue darken-2" @click="handleSubmit">
+            Submit
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-container>
   </v-main>
 </template>
 
 <script>
-import useDataBase from "../../utils/useDatabase.js";
-// import { uploadImage } from "../../utils/useUploadImg.js";
-
-
+import { ref, computed, onMounted } from "vue";
+import itemsApi from "../../utils/api/items";
 import {
   VMain,
+  VContainer,
   VCard,
   VCardTitle,
   VCardText,
-  VCardActions,
-  VTextField,
-  VFileInput,
-  VSelect,
-  VBtn,
+  VDivider,
   VForm,
+  VTextField,
+  VSelect,
+  VFileInput,
+  VRow,
+  VCol,
+  VImg,
+  VCardActions,
+  VSpacer,
+  VBtn,
+  VIcon,
+  VChip,
 } from "vuetify/components";
 
 export default {
   name: "AddItem",
   components: {
     VMain,
+    VContainer,
     VCard,
     VCardTitle,
     VCardText,
-    VCardActions,
-    VTextField,
-    VFileInput,
-    VSelect,
-    VBtn,
+    VDivider,
     VForm,
+    VTextField,
+    VSelect,
+    VFileInput,
+    VRow,
+    VCol,
+    VImg,
+    VCardActions,
+    VSpacer,
+    VBtn,
+    VIcon,
+    VChip,
   },
-  data() {
-    return {
-      name: "",
-      price: "",
-      description: "",
-      type: "",
-      img: null,
-      valid: false,
-    };
-  },
-  methods: {
-    addItem() {
-      if (this.$refs.form.validate()) {
-        const newItem = {
-          name: this.name,
-          price: parseFloat(this.price), // Certifique-se de que o preço é um número
-          description: this.description,
-          type: this.type,
-          image_url: this.img ? this.img.name : "https://via.placeholder.com/300x200",
-        };
-        console.log("Adding item...", newItem);
-        useDataBase.setItem(newItem);
-        useDataBase.uploadFile(this.img);
-        console.log("Item added successfully!", newItem);
-        this.$router.push({ name: "Home" });
-      }
+  props: {
+    storeId: {
+      type: String,
+      required: true,
     },
+  },
+  setup(props) {
+    const valid = ref(false);
+    const name = ref("");
+    const description = ref("");
+    const price = ref("");
+    const category = ref("");
+    const type = ref([]);
+    const images = ref([]); // Array for multiple images
+    const status = ref("active");
+    const types = ref(["food", "drink", "dessert"]);
+    const categories = ref([]);
+    const categoriesObj = ref({});
+    const statuses = ref(["active", "inactive"]);
+
+    const fetchCategories = async () => {
+      try {
+        const response = await itemsApi.getAllCategories();
+        categoriesObj.value = response;
+        categories.value = categoriesObj.value.map((category) => category.name);
+        console.log("categories", categories.value);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+    const handleImageChange = () => {
+      imagePreviews.value = [];
+      for (const file of images.value) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreviews.value.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const clearForm = () => {
+      name.value = "";
+      description.value = "";
+      price.value = "";
+      types.value = "";
+      category.value = "";
+      images.value = [];
+      status.value = "available";
+    };
+
+    const handleSubmit = async () => {
+      if (valid.value) {
+        const item = {
+          name: name.value,
+          description: description.value,
+          price: parseFloat(price.value),
+          category_id: categoriesObj.value.find(
+            (cat) => cat.name === category.value
+          ).id,
+          type: types.value,
+          image_names: images.value.map((file) => file.name),
+          status: status.value,
+        };
+
+        try {
+          console.log("item", item);
+          await itemsApi.addItem(props.storeId, item);
+          clearForm();
+        } catch (error) {
+          console.error("Failed to add item:", error);
+        }
+      }
+    };
+
+    const addImage = (file) => {
+      images.value.push(file);
+    };
+
+    const imagePreviews = computed(
+      () => images.value.map((file) => URL.createObjectURL(file)),
+      console.log("images", images.value)
+    );
+
+    const removeImage = (index) => {
+      images.value.splice(index, 1);
+    };
+
+    onMounted(fetchCategories);
+
+    return {
+      valid,
+      name,
+      description,
+      price,
+      type,
+      category,
+      images,
+      status,
+      types,
+      categories,
+      statuses,
+      handleSubmit,
+      clearForm,
+      imagePreviews,
+      removeImage,
+      addImage,
+      handleImageChange,
+    };
   },
 };
 </script>
 
 <style scoped>
-/* Seus estilos aqui */
+.preview-container {
+  border: 1px dashed #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.v-chip {
+  margin: 5px;
+}
+
+.v-main {
+  background: #f9f9f9;
+}
 </style>

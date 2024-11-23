@@ -55,7 +55,6 @@
       <v-divider></v-divider>
 
       <v-card-actions>
-        <v-spacer></v-spacer>
         <v-btn text="Close" variant="plain" @click="dialog = false"></v-btn>
         <v-btn
           :color="palette.dodgerblue[400]"
@@ -82,11 +81,12 @@ import {
   VBtn,
   VIcon,
   VForm,
+  VSpacer,
 } from "vuetify/components";
 import palette from "../../../palette";
-import useDataBase from "../../utils/useDataBase";
+// import useDataBase from "../../utils/useDataBase";
 import { useUserStore } from "../../stores/useStore"; // Importa o Pinia store
-
+import api from "../../utils//index";
 export default {
   name: "LoginDialog",
   components: {
@@ -101,6 +101,7 @@ export default {
     VBtn,
     VIcon,
     VForm,
+    VSpacer,
   },
   data() {
     return {
@@ -117,7 +118,8 @@ export default {
   methods: {
     async handleLogin() {
       try {
-        const userData = await useDataBase.loginUser(this.user); // Chama a função de login do banco de dados
+        // const userData = await useDataBase.loginUser(this.user);
+        const userData = await api.auth.loginUser(this.user); // Chama a função de login do backend
         const userStore = useUserStore();
         userStore.setUser(userData); // Armazena os dados do usuário no store
         console.log("User logged in:", userStore);

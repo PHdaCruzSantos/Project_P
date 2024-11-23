@@ -67,24 +67,24 @@ const saveOrUpdateUser = async (user) => {
   return await response.json();
 };
 
-// GET: login user
-const loginUser = async (user) => {
-  const response = await fetch(`${apiUrl}/users/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(user),
-  });
-  console.log("BODY", user);
+// // GET: login user
+// const loginUser = async (user) => {
+//   const response = await fetch(`${apiUrl}/users/login`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify(user),
+//   });
+//   console.log("BODY", user);
 
-  if (!response.ok) {
-    throw new Error("Failed to login user");
-  }
+//   if (!response.ok) {
+//     throw new Error("Failed to login user");
+//   }
 
-  console.log("RESPONSE", response.body);
-  return await response.json();
-};
+//   console.log("RESPONSE", response.body);
+//   return await response.json();
+// };
 
 export default {
   getItems,
@@ -93,5 +93,5 @@ export default {
   uploadFile,
   getImages,
   saveOrUpdateUser,
-  loginUser,
+  // loginUser,
 };

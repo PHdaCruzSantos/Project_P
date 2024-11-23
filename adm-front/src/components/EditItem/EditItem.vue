@@ -1,111 +1,296 @@
 <template>
   <v-container>
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-img :src="imageSrc" class="item-image"></v-img>
-      </v-col>
+    <v-card class="elevation-3 mx-auto" max-width="800px">
+      <!-- Título -->
+      <v-card-title class="text-h5 font-weight-bold">
+        <v-icon @click="goBack" :style="{ color: palette.lightblue[300] }">
+          mdi-arrow-left
+        </v-icon>
+        Edit Item
+      </v-card-title>
 
-      <!-- Formulário de Edição -->
-      <v-col cols="12" md="6">
-        <v-form @submit.prevent="saveItem">
-          <v-text-field
-            v-model="editedItem.name"
-            label="Name"
-            required
-          ></v-text-field>
-          <v-text-field
-            v-model="editedItem.price"
-            label="Price"
-            required
-          ></v-text-field>
-          <v-select
-            v-model="editedItem.type"
-            :items="types"
-            label="Type"
-            required
-          ></v-select>
-          <v-file-input
-            v-model="newImage"
-            label="Add Image"
-            @change="addImage"
-          ></v-file-input>
-          <v-btn type="submit" color="primary">Save</v-btn>
-          <v-btn @click="$emit('closeEdit')" color="secondary">Cancel</v-btn>
+      <v-divider></v-divider>
+
+      <!-- Formulário -->
+      <v-card-text>
+        <v-form ref="form" v-model="valid" lazy-validation>
+          <v-row>
+            <!-- Imagem Principal -->
+            <v-col cols="12" class="d-flex align-center justify-center">
+              <v-img
+                v-if="itemData.image"
+                :src="`${URL_BACKEND}/upload/images/${itemData.image}`"
+                alt="Item Image"
+                class="main-item-image"
+                contain
+              ></v-img>
+            </v-col>
+
+            <!-- Informações -->
+            <v-col cols="12">
+              <v-text-field
+                v-model="itemData.name"
+                label="Item Name"
+                outlined
+                dense
+              ></v-text-field>
+
+              <v-text-field
+                v-model="itemData.description"
+                label="Description"
+                outlined
+                dense
+              ></v-text-field>
+
+              <v-text-field
+                v-model="itemData.price"
+                label="Price (R$)"
+                type="number"
+                outlined
+                dense
+              ></v-text-field>
+
+              <v-select
+                v-model="itemData.category"
+                :items="categories"
+                label="Category"
+                outlined
+                dense
+              ></v-select>
+
+              <v-file-input
+                v-model="newImages"
+                label="Upload Images"
+                outlined
+                dense
+                multiple
+                @change="handleImageChange"
+              ></v-file-input>
+
+              <!-- Preview de Imagens -->
+              <v-row dense v-if="allImagePreviews.length" class="mt-4">
+                <v-col
+                  cols="4"
+                  v-for="(preview, index) in allImagePreviews"
+                  :key="index"
+                >
+                  <v-img :src="preview" max-height="100px" />
+                  <v-btn small text color="red" @click="removeImage(index)">
+                    Remove
+                  </v-btn>
+                </v-col>
+              </v-row>
+
+              <v-select
+                v-model="itemData.status"
+                :items="statuses"
+                label="Status"
+                outlined
+                dense
+              ></v-select>
+            </v-col>
+          </v-row>
         </v-form>
-      </v-col>
-    </v-row>
+      </v-card-text>
+
+      <v-divider></v-divider>
+
+      <!-- Ações -->
+      <v-card-actions>
+        <v-btn color="grey darken-1" text @click="clearForm">Clear</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-2" @click="handleSubmit">Save Changes</v-btn>
+      </v-card-actions>
+    </v-card>
   </v-container>
 </template>
 
 <script>
+import { ref, onMounted } from "vue";
+import itemsApi from "@/utils/api/items";
+import { useRouter } from "vue-router";
+import palette from "../../../palette";
 import {
   VContainer,
+  VCard,
+  VCardTitle,
+  VDivider,
+  VCardText,
+  VForm,
   VRow,
   VCol,
-  VForm,
+  VImg,
   VTextField,
   VSelect,
   VFileInput,
   VBtn,
-  VImg,
+  VSpacer,
+  VCardActions,
+  VIcon,
 } from "vuetify/components";
-import itemsStore from "../../stores/itemsStore";
+
 export default {
   name: "EditItem",
+  props: {
+    itemId: {
+      type: String,
+      required: true,
+    },
+  },
   components: {
     VContainer,
+    VCard,
+    VCardTitle,
+    VDivider,
+    VCardText,
+    VForm,
     VRow,
     VCol,
-    VForm,
+    VImg,
+    VIcon,
     VTextField,
     VSelect,
     VFileInput,
     VBtn,
-    VImg,
+    VSpacer,
+    VCardActions,
   },
-  props: {
-    item: {
-      type: Object,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      editedItem: { ...this.item }, // Faz uma cópia do item para edição
-      newImage: null,
-      types: ["A", "B", "C"], // Tipos disponíveis
+  setup(props) {
+    const valid = ref(false);
+    const itemData = ref({
+      name: "",
+      description: "",
+      price: "",
+      category: "",
+      status: "available",
+    });
+    const categories = ref([]);
+    const statuses = ref(["available", "unavailable"]);
+    const existingImagePreviews = ref([]);
+    const newImages = ref([]);
+    const allImagePreviews = ref([]);
+    const router = useRouter();
+    const itemId = props.itemId;
+    const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
+
+    const fetchItemDetails = async () => {
+      try {
+        const response = await itemsApi.getAllInfoItem(props.itemId);
+        itemData.value = {
+          name: response.item.name,
+          description: response.item.description,
+          price: response.item.price,
+          category: response.item.category,
+          status: response.item.status,
+          image: response.item.image_names,
+        };
+        console.log(itemData.value.image);
+        allImagePreviews.value = [...existingImagePreviews.value];
+      } catch (error) {
+        console.error("Failed to fetch item details:", error);
+      }
     };
-  },
-  computed: {
-    imageSrc() {
-      return this.editedItem.img || "https://via.placeholder.com/300x200";
-    },
-  },
-  methods: {
-    saveItem() {
-      itemsStore.updateItem(this.editedItem); // Atualiza o item na store
-      console.log("Item salvo:", this.editedItem);
-      this.$emit("closeEdit"); // Fecha o editor após salvar
-    },
-    addImage() {
-      if (this.newImage) {
+
+    const fetchCategories = async () => {
+      try {
+        const response = await itemsApi.getAllCategories();
+        categories.value = response.map((cat) => cat.name);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    const handleImageChange = () => {
+      newImages.value.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          this.editedItem.img = e.target.result; // Atualiza a imagem principal
-          this.newImage = null; // Limpa o campo de upload
+          allImagePreviews.value.push(e.target.result);
         };
-        reader.readAsDataURL(this.newImage);
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const removeImage = (index) => {
+      if (index < existingImagePreviews.value.length) {
+        existingImagePreviews.value.splice(index, 1);
+      } else {
+        newImages.value.splice(index - existingImagePreviews.value.length, 1);
       }
-    },
+      allImagePreviews.value = [
+        ...existingImagePreviews.value,
+        ...newImages.value.map((file) => URL.createObjectURL(file)),
+      ];
+    };
+
+    const clearForm = () => {
+      itemData.value = {
+        name: "",
+        description: "",
+        price: "",
+        category: "",
+        status: itemData.value.status,
+      };
+      existingImagePreviews.value = [];
+      newImages.value = [];
+      allImagePreviews.value = [];
+    };
+
+    const handleSubmit = async () => {
+      if (valid.value) {
+        const updatedData = {
+          ...itemData.value,
+          images: newImages.value.map((file) => file.name),
+        };
+        try {
+          await itemsApi.updateItem(itemId, updatedData);
+          router.push({ name: "ItemInfoView", params: { itemId } });
+        } catch (error) {
+          console.error("Failed to update item:", error);
+        }
+      }
+    };
+
+    const goBack = () => {
+      router.go(-1);
+    };
+
+    onMounted(() => {
+      fetchItemDetails();
+      fetchCategories();
+    });
+
+    return {
+      valid,
+      itemData,
+      categories,
+      statuses,
+      existingImagePreviews,
+      newImages,
+      allImagePreviews,
+      fetchItemDetails,
+      handleImageChange,
+      removeImage,
+      clearForm,
+      handleSubmit,
+      goBack,
+      palette,
+      URL_BACKEND,
+    };
   },
 };
 </script>
 
 <style scoped>
-.item-image {
-  width: 100%;
-  height: auto;
+.v-card {
+  padding: 20px;
+}
+
+.main-item-image {
+  border-radius: 8px;
   max-width: 100%;
-  max-height: 100%;
+}
+
+.v-btn {
+  margin: 5px;
 }
 </style>
