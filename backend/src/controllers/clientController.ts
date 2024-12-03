@@ -55,3 +55,90 @@ export const deleteClient = async (req: Request, res: Response) => {
     res.status(404).json({ message: "Controller", error });
   }
 };
+
+export const addFavItem = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const itemId = req.params.itemId;
+    const result = await clientServices.addFavItem(clientId, itemId);
+
+    if (!result) {
+      res.status(404).json({ message: "Failed to add favorite" });
+    }
+    res.status(200).json({ message: "Item added to favorites" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const removeFavItem = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const itemId = req.params.itemId;
+    const result = await clientServices.removeFavItem(clientId, itemId);
+
+    if (!result) {
+      res.status(404).json({ message: "Failed to remove favorite" });
+    }
+    res.status(200).json({ message: "Item removed from favorites" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getFavorites = async (req: Request, res: Response) => {
+  try {
+    const clienteId = req.params.clienteId;
+    const client = await clientServices.getClientById(clienteId);
+
+    const favorites = client.fav_items
+      ? client.fav_items.split(",").filter(Boolean)
+      : [];
+    res.status(200).json(favorites);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getClientAddresses = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const addresses = await clientServices.getAddressesByClientId(clientId);
+    res.status(200).json(addresses);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const createClientAddress = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const address = await clientServices.createAddress({
+      ...req.body,
+      clients_id: clientId,
+    });
+    res.status(201).json(address);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const updateClientAddress = async (req: Request, res: Response) => {
+  try {
+    const { addressId } = req.params;
+    const address = await clientServices.updateAddress(addressId, req.body);
+    res.status(200).json(address);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteClientAddress = async (req: Request, res: Response) => {
+  try {
+    const { addressId } = req.params;
+    await clientServices.deleteAddress(addressId);
+    res.status(200).json({ message: "Address deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

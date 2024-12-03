@@ -1,5 +1,5 @@
 <template>
-  <v-container v-if="isLoggedIn && !isLoading">
+  <v-container>
     <v-toolbar
       :color="palette.slategray[700]"
       flat

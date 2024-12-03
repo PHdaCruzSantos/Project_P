@@ -6,7 +6,6 @@
 
 <script>
 import { VMain } from "vuetify/components";
-import cartStore from "../store/cartStore";
 import CartList from "../components/CartList/CartList.vue";
 
 export default {
@@ -14,47 +13,6 @@ export default {
   components: {
     VMain,
     CartList,
-  },
-  data() {
-    return {
-      headers: [
-        { text: "Product", value: "name" },
-        { text: "Price", value: "price" },
-        { text: "Description", value: "description" },
-        { text: "Image", value: "image" },
-        { text: "Actions", value: "actions", sortable: false },
-      ],
-      item: {
-        name: cartStore.state.name,
-        description: cartStore.state.description,
-        price: cartStore.state.price,
-        quantity: cartStore.state.quantity,
-        image: cartStore.state.image,
-      },
-    };
-  },
-  methods: {
-    removeFromCart(item) {
-      // Logic to remove item from cart
-      cartStore.removeFromCart(item);
-    },
-    checkout() {
-      // Logic to handle checkout
-      console.log("Checkout");
-    },
-    handleImageLoadError(event) {
-      event.target.src = "https://via.placeholder.com/50";
-    },
-  },
-  computed: {
-    cartStore() {
-      return cartStore;
-    },
-    formatedPrice() {
-      return this.item.price !== undefined
-        ? this.item.price.toFixed(2)
-        : "0.00";
-    },
   },
 };
 </script>

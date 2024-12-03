@@ -3,22 +3,64 @@
     :elevation="2"
     dark
     rounded
-    :style="{ backgroundColor: palette.steelblue[500] }"
+    :style="{ backgroundColor: palette.midnightblue[900] }"
   >
     <template v-slot:prepend>
-      <v-app-bar-title><v-btn icon="mdi-home" to="/"></v-btn></v-app-bar-title>
-
-      <v-btn to="/stores">Stores</v-btn>
-      <v-btn v-if="isLoggedIn" to="/products">Products</v-btn>
+      <v-avatar
+        class="mx-3"
+        :image="`${URL_BACKEND}/upload/images/seletto_logo.png`"
+      />
+      <v-divider
+        :color="palette.dodgerblue[400]"
+        :thickness="2"
+        class="border-opacity-100"
+        inset
+        vertical
+      ></v-divider>
+      <v-app-bar-title class="mx-3">
+        <v-btn icon to="/">
+          <v-icon :color="palette.dodgerblue[400]"> mdi-home </v-icon>
+        </v-btn>
+      </v-app-bar-title>
+      <v-btn
+        prepend-icon="mdi-shopping"
+        variant="outlined"
+        v-if="isLoggedIn"
+        to="/products"
+        :color="palette.dodgerblue[400]"
+      >
+        Produtos
+      </v-btn>
     </template>
 
     <template v-slot:append>
-      <v-btn v-if="!isLoggedIn" @click="showLoginDialog = true"> Login </v-btn>
-      <v-btn v-else @click="handleLogout"> Logout </v-btn>
+      <v-btn
+        class="mr-3"
+        :color="palette.dodgerblue[400]"
+        v-if="!isLoggedIn"
+        variant="outlined"
+        @click="showLoginDialog = true"
+        prepend-icon="mdi-login"
+      >
+        Login
+      </v-btn>
+      <v-btn
+        class="mr-3"
+        prepend-icon="mdi-logout"
+        :color="palette.dodgerblue[400]"
+        v-else
+        @click="handleLogout"
+      >
+        Logout
+      </v-btn>
       <v-dialog v-model="showLoginDialog" max-width="500px">
         <v-card :style="{ backgroundColor: palette.steelblue[900] }">
           <!-- Botão X no canto superior direito -->
-          <v-icon class="close-btn" @click="showLoginDialog = false">
+          <v-icon
+            :color="palette.teal[200]"
+            class="close-btn"
+            @click="showLoginDialog = false"
+          >
             mdi-close
           </v-icon>
 
@@ -57,8 +99,8 @@
             <v-spacer></v-spacer>
             <v-btn
               :loading="isLoggingIn"
-              color="blue darken-1"
-              text
+              :color="palette.dodgerblue[300]"
+              variant="outlined"
               @click="handleLogin"
             >
               Login
@@ -84,6 +126,8 @@ import {
   VTextField,
   VSpacer,
   VIcon,
+  VAvatar,
+  VDivider,
 } from "vuetify/components";
 import palette from "../../../palette";
 import { useRouter } from "vue-router";
@@ -107,6 +151,8 @@ export default {
     VTextField,
     VSpacer,
     VIcon,
+    VAvatar,
+    VDivider,
   },
   setup() {
     const userStore = useUserStore();
@@ -117,6 +163,7 @@ export default {
     });
     const isLoggingIn = ref(false);
     const router = useRouter();
+    const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
 
     const handleLogin = async () => {
       isLoggingIn.value = true;
@@ -165,6 +212,7 @@ export default {
       cartItemCount,
       isLoggedIn,
       palette,
+      URL_BACKEND,
     };
   },
 };

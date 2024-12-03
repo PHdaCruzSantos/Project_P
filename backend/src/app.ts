@@ -9,6 +9,8 @@ import userRouter from "./routes/userRoutes";
 import itemsRouter from "./routes/itemsRoutes";
 import storeRouter from "./routes/storesRoutes";
 import clientRouter from "./routes/clientRoutes";
+import paymentRouter from "./routes/paymentRoutes";
+import shippingRouter from "./routes/shippingRoutes";
 import uploadRoutes from "./upload";
 
 export const app = express();
@@ -35,4 +37,6 @@ app.use("/api", userRouter);
 app.use("/api", storeRouter);
 app.use("/api", itemsRouter);
 app.use("/api", clientRouter);
+app.use("/api", paymentRouter);
+app.use("/api", shippingRouter);
 app.use("/upload", uploadRoutes);

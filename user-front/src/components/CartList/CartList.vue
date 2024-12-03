@@ -3,48 +3,90 @@
     <VRow>
       <VCol cols="12">
         <VCard>
-          <VCardTitle>Cart</VCardTitle>
+          <VCardTitle class="d-flex justify-space-between align-center">
+            <span>Shopping Cart</span>
+            <span class="text-subtitle-1">Total: R$ {{ cartTotal }}</span>
+          </VCardTitle>
+
           <VCardText>
             <div class="cart-table-container">
-              <VDataTable
-                :headers="headers"
-                :items="cartStore.items"
-                :hide-default-footer="true"
-                fixed-header
-              >
-                <template v-slot:item="{ item }">
-                  <tr class="overflow-y-auto" style="cursor: pointer">
+              <VTable v-if="cartItems.length" fixed-header>
+                <thead>
+                  <tr>
+                    <th scope="col">Image</th>
+                    <th scope="col">Product</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in cartItems" :key="item.id">
                     <td class="p-2">
-                      <v-avatar :image="`${URL_BACKEND}/upload/${item.image_names}`" />
+                      <VAvatar
+                        :image="getImageUrl(item.image_names)"
+                        @error="handleImageLoadError"
+                      />
                     </td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.description }}</td>
-                    <td class="price">R${{ item.price * item.quantity }}</td>
-                    <td>{{ item.quantity }}</td>
                     <td>
-                      <transition name="fade">
-                        <v-icon
-                          @click="removeFromCart(item)"
-                          :icon="
-                            hoveredIndex === item.id
-                              ? 'mdi-delete-empty'
-                              : 'mdi-delete'
-                          "
-                          size="x-large"
-                          color="error"
-                          @mouseover="isHover(item.id)"
-                          @mouseleave="isHover(null)"
-                        >
-                        </v-icon>
-                      </transition>
+                      <div class="font-weight-medium">{{ item.name }}</div>
+                      <div class="text-caption">{{ item.description }}</div>
+                    </td>
+                    <td>R$ {{ formatPrice(item.price) }}</td>
+                    <td>
+                      <div class="d-flex align-center">
+                        <VBtn
+                          icon="mdi-minus"
+                          size="small"
+                          variant="text"
+                          @click="updateQuantity(item, -1)"
+                          :disabled="item.quantity <= 1"
+                        />
+                        <span class="mx-2">{{ item.quantity }}</span>
+                        <VBtn
+                          icon="mdi-plus"
+                          size="small"
+                          variant="text"
+                          @click="updateQuantity(item, 1)"
+                        />
+                      </div>
+                    </td>
+                    <td class="price">
+                      R$ {{ formatPrice(item.price * item.quantity) }}
+                    </td>
+                    <td>
+                      <VBtn
+                        icon="mdi-delete"
+                        color="error"
+                        variant="text"
+                        @click="removeFromCart(item)"
+                      />
                     </td>
                   </tr>
-                </template>
-              </VDataTable>
+                </tbody>
+              </VTable>
+
+              <VAlert v-else type="info" class="mt-4">
+                Your cart is empty
+              </VAlert>
             </div>
           </VCardText>
-          <VCardActions>
-            <VBtn @click="checkout" color="success">Checkout</VBtn>
+
+          <VDivider />
+
+          <VCardActions class="justify-space-between">
+            <VBtn to="/" variant="text" prepend-icon="mdi-arrow-left">
+              Continue Shopping
+            </VBtn>
+            <VBtn
+              color="primary"
+              :disabled="!cartItems.length"
+              @click="checkout"
+              append-icon="mdi-cart-checkout"
+            >
+              Checkout
+            </VBtn>
           </VCardActions>
         </VCard>
       </VCol>
@@ -53,6 +95,10 @@
 </template>
 
 <script>
+import { computed, onMounted } from "vue";
+import { useCartStore } from "@/stores/cartStore";
+import { useClientStore } from "@/stores/clientsStore";
+import { useRouter } from "vue-router";
 import {
   VContainer,
   VRow,
@@ -60,17 +106,17 @@ import {
   VCard,
   VCardTitle,
   VCardText,
-  VCardActions,
-  VDataTable,
-  VBtn,
+  VTable,
   VAvatar,
-  VIcon,
-  VHover,
+  VBtn,
+  VAlert,
+  VDivider,
+  VCardActions,
 } from "vuetify/components";
-import cartStore from "../../store/cartStore";
 
 export default {
   name: "CartList",
+
   components: {
     VContainer,
     VRow,
@@ -78,81 +124,86 @@ export default {
     VCard,
     VCardTitle,
     VCardText,
-    VCardActions,
-    VDataTable,
-    VBtn,
+    VTable,
     VAvatar,
-    VIcon,
-    VHover,
+    VBtn,
+    VAlert,
+    VDivider,
+    VCardActions,
   },
-  data() {
-    return {
-      URL_BACKEND: import.meta.env.VITE_API_URL_BACKEND,
-      headers: [
-        { text: "Product", value: "name" },
-        { text: "Price", value: "price" },
-        { text: "Description", value: "description" },
-        { text: "Image", value: "image" },
-        { text: "Actions", value: "actions", sortable: false },
-      ],
-      item: {
-        id: cartStore.state.items.id,
-        name: cartStore.state.items.name,
-        description: cartStore.state.items.description,
-        quantity: cartStore.state.items.quantity,
-        price: cartStore.state.items.price,
-        image: cartStore.state.items.image_names
-      },
-      hoveredIndex: null,
+
+  setup() {
+    const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
+    const cartStore = useCartStore();
+    const clientStore = useClientStore();
+    const router = useRouter();
+
+    const cartItems = computed(() => cartStore.items);
+    const cartTotal = computed(() => formatPrice(cartStore.total));
+
+    function formatPrice(value) {
+      return new Intl.NumberFormat("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(value);
+    }
+
+    function getImageUrl(image) {
+      return `${URL_BACKEND}/upload/images/${image}`;
+    }
+
+    const updateQuantity = (item, change) => {
+      cartStore.updateItemQuantity(item.id, item.quantity + change);
     };
-  },
-  methods: {
-    removeFromCart(item) {
-      // Logic to remove item from cart
+
+    function removeFromCart(item) {
       cartStore.removeFromCart(item);
-    },
-    checkout() {
-      // Logic to handle checkout
-      console.log("Checkout");
-    },
-    handleImageLoadError(event) {
+    }
+
+    function checkout() {
+      console.log("Proceeding to checkout...");
+      router.push({ name: "ShippingView" });
+    }
+
+    function handleImageLoadError(event) {
       event.target.src = "https://via.placeholder.com/50x50";
-    },
-    isHover(itemId) {
-      // console.log("Hovered", itemId);
-      this.hoveredIndex = itemId;
-      // console.log(this.hoveredIndex);
-      return this.hoveredIndex;
-    },
-  },
-  computed: {
-    cartStore() {
-      console.log(cartStore.state);
-      return cartStore.state;
-    },
-    formattedPrice(p) {
-      const price = parseFloat(p);
-      return !isNaN(price) ? price.toFixed(2) : "0.00";
-    },
+    }
+
+    onMounted(() => {
+      if (clientStore.isLoggedIn) {
+        cartStore.initCart(clientStore.currentUser.id);
+        console.log("Cart initialized for user", clientStore.currentUser.id);
+        console.log("Cart initialized for user", cartStore.items);
+      }
+    });
+
+    return {
+      cartItems,
+      cartTotal,
+      formatPrice,
+      getImageUrl,
+      updateQuantity,
+      removeFromCart,
+      checkout,
+      handleImageLoadError,
+    };
   },
 };
 </script>
 
 <style scoped>
 .cart-table-container {
-  max-height: 400px; /* Defina a altura máxima do contêiner */
-  overflow-y: auto; /* Adicione rolagem vertical */
+  max-height: 70vh;
+  overflow-y: auto;
 }
+
 .price {
-  white-space: nowrap;
   color: green;
   font-weight: bold;
+  white-space: nowrap;
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
-  opacity: 0;
+
+.v-table {
+  background: transparent !important;
 }
 </style>
