@@ -1,67 +1,109 @@
 import asaasClientService from "./asaasClientService";
 
-interface OrderItem {
-  name: string;
+interface PaymentRequest {
+  customer: string; // ASAAS customer ID
+  billingType: "PIX"; // Payment type
+  value: number; // Payment amount
+  dueDate: string; // Payment due date
+  description?: string; // Payment description
+  externalReference?: string; // Reference to our system's order ID
+}
+interface CreatePaymentDTO {
   value: number;
-  quantity: number;
+  customerName: string;
+  customerEmail: string;
+  customerCpfCnpj: string;
+  customerPhone?: string;
+  description?: string;
+  externalReference?: string;
 }
 
-interface PaymentRequest {
-  customer: string;
-  value: number;
-  billingType: "PIX";
-  dueDate: string;
-  description?: string;
-  externalReference?: string; // Reference to our order ID
+interface PixDetails {
+  encodedImage: string; // QR code image in base64
+  payload: string; // PIX code (string to copy)
+  expirationDate: string; // PIX expiration date
 }
 
 interface PaymentResponse {
   id: string;
+  dateCreated: string;
+  customer: string;
+  value: number;
+  netValue: number;
+  billingType: string;
   status: string;
-  paymentUrl?: string;
-  pixQrCode?: string;
-  pixQrCodeImage?: string;
-  externalReference?: string;
+  dueDate: string;
+  originalValue: number;
+  pix?: PixDetails;
 }
 
-export const CreatePayment = async (
-  paymentData: PaymentRequest,
-  customerData?: CustomerRequest,
-  orderItems?: OrderItem[]
+const createPixPayment = async (
+  paymentData: CreatePaymentDTO
 ): Promise<PaymentResponse> => {
   try {
-    if (customerData) {
-      const existingCustomer = await asaasClientService.findCustomerByCpfCnpj(
-        customerData.cpfCnpj
-      );
+    // Check if customer exists in ASAAS
+    let customer = await asaasClientService.findCustomerByCpfCnpj(
+      paymentData.customerCpfCnpj
+    );
 
-      if (!existingCustomer) {
-        const newCustomer = await asaasClientService.createCustomer(
-          customerData
-        );
-        paymentData.customer = newCustomer.id;
-      } else {
-        paymentData.customer = existingCustomer.id;
-      }
+    // If customer doesn't exist, create new customer
+    if (!customer) {
+      customer = await asaasClientService.createCustomer({
+        name: paymentData.customerName,
+        email: paymentData.customerEmail,
+        cpfCnpj: paymentData.customerCpfCnpj,
+        phone: paymentData.customerPhone,
+        externalReference: paymentData.externalReference,
+      });
     }
 
-    // Add order details to payment description
-    if (orderItems) {
-      paymentData.description = orderItems
-        .map((item) => `${item.quantity}x ${item.name} - R$ ${item.value}`)
-        .join("\n");
-    }
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 1);
+
+    const payment: PaymentRequest = {
+      customer: customer.id,
+      billingType: "PIX",
+      value: paymentData.value,
+      dueDate: dueDate.toISOString().split("T")[0],
+      description: paymentData.description,
+      externalReference: paymentData.externalReference,
+    };
 
     const response = await asaasClientService.asaasClientService.post(
       "/payments",
-      paymentData
+      payment
     );
-    return response.data;
+
+    const pixResponse = await asaasClientService.asaasClientService.get(
+      `/payments/${response.data.id}/pixQrCode`
+    );
+
+    return {
+      ...response.data,
+      pix: pixResponse.data,
+    };
   } catch (error) {
     console.error(
-      "Error creating payment:",
+      "Error creating PIX payment:",
       error.response?.data || error.message
     );
-    throw new Error("Failed to create payment");
+    throw new Error("Failed to create PIX payment");
   }
 };
+
+const checkPaymentStatus = async (paymentId: string): Promise<string> => {
+  try {
+    const response = await asaasClientService.asaasClientService.get(
+      `/payments/${paymentId}`
+    );
+    return response.data.status;
+  } catch (error) {
+    console.error(
+      "Error checking payment status:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to check payment status");
+  }
+};
+
+export default { createPixPayment, checkPaymentStatus };

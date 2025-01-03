@@ -238,12 +238,12 @@ export const reviewsTable = sqliteTable("reviews", {
 });
 
 // Tabela de Carrinho com UUID como chave primária e referência ao UUID do usuário e do item
-export const cartTable = sqliteTable("cart", {
+export const cartClientsTable = sqliteTable("cartClients", {
   id: text("id").primaryKey().notNull(), // UUID para o carrinho
   clients_id: text("clients_id") // UUID do usuário
     .notNull()
     .references(() => clientsTable.id),
-  item_id: text("item_id") // UUID do item ou da variante
+  items_id: text("items_id") // UUID do item ou da variante
     .notNull()
     .references(() => itemsTable.id),
   quantity: integer("quantity").notNull(),

@@ -11,6 +11,9 @@ import {
   createClientAddress,
   updateClientAddress,
   deleteClientAddress,
+  addCart,
+  removeCart,
+  getCartByClientId,
 } from "@/controllers/clientController";
 import { authMiddleware } from "@/middlewares/authMiddleware";
 
@@ -52,5 +55,13 @@ clientRouter.delete(
   removeFavItem
 );
 clientRouter.get("/client/:clienteId/favorites", authMiddleware, getFavorites);
+
+clientRouter.post("/client/:clientId/cart/:itemId", authMiddleware, addCart);
+clientRouter.delete(
+  "/client/:clientId/cart/:itemId",
+  authMiddleware,
+  removeCart
+);
+clientRouter.get("/client/:clientId/cart", authMiddleware, getCartByClientId);
 
 export default clientRouter;

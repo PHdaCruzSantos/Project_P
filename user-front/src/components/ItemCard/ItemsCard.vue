@@ -100,6 +100,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useCartStore } from "@/stores/cartStore";
 import { useClientStore } from "@/stores/clientsStore";
+import clientsApi from "@/utils/api/clientsApi";
 import InfoItem from "../InfoItem/InfoItem.vue";
 
 import {
@@ -195,7 +196,7 @@ export default {
         return;
       }
       console.log("Adding to cart:", props.item);
-      cartStore.addToCart(props.item);
+      clientsApi.addCartItem(clientStore.currentUser.id, props.item.id);
     };
 
     const showItemDetails = () => {

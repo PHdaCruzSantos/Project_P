@@ -1,6 +1,10 @@
 import { db } from "../index";
-import { clientsTable, clientAddressesTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import {
+  clientsTable,
+  clientAddressesTable,
+  cartClientsTable,
+} from "../db/schema";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import bcrypt from "bcryptjs";
 
@@ -195,6 +199,107 @@ const removeFavItem = async (clientId: string, itemId: string) => {
   return retClient;
 };
 
+const getCartByClientId = async (clientId: string) => {
+  const cart = await db
+    .select()
+    .from(cartClientsTable)
+    .where(eq(cartClientsTable.clients_id, clientId))
+    .all();
+
+  return cart;
+};
+
+const addCart = async (clientId: string, itemId: string) => {
+  // Check if client already has this item in cart
+  const existingCartItem = await db
+    .select()
+    .from(cartClientsTable)
+    .where(
+      and(
+        eq(cartClientsTable.clients_id, clientId),
+        eq(cartClientsTable.items_id, itemId)
+      )
+    )
+    .get();
+
+  if (existingCartItem) {
+    // Increment quantity if item exists
+    const updatedCart = await db
+      .update(cartClientsTable)
+      .set({
+        quantity: existingCartItem.quantity + 1,
+      })
+      .where(
+        and(
+          eq(cartClientsTable.clients_id, clientId),
+          eq(cartClientsTable.items_id, itemId)
+        )
+      );
+
+    return updatedCart;
+  } else {
+    // Create new cart entry if item doesn't exist
+    const newCartItem = {
+      id: uuid(),
+      clients_id: clientId,
+      items_id: itemId,
+      quantity: 1,
+      created_at: new Date(),
+    };
+
+    const retCart = await db.insert(cartClientsTable).values(newCartItem);
+
+    return retCart;
+  }
+};
+
+const removeCart = async (clientId: string, itemId: string) => {
+  // Find the cart item
+  const cartItem = await db
+    .select()
+    .from(cartClientsTable)
+    .where(
+      and(
+        eq(cartClientsTable.clients_id, clientId),
+        eq(cartClientsTable.items_id, itemId)
+      )
+    )
+    .get();
+
+  if (!cartItem) {
+    throw new Error("Item not found in cart");
+  }
+
+  if (cartItem.quantity > 1) {
+    // Decrement quantity
+    const updatedCart = await db
+      .update(cartClientsTable)
+      .set({
+        quantity: cartItem.quantity - 1,
+      })
+      .where(
+        and(
+          eq(cartClientsTable.clients_id, clientId),
+          eq(cartClientsTable.items_id, itemId)
+        )
+      );
+
+    return updatedCart;
+  } else {
+    // Remove item completely
+    const deletedItem = await db
+      .delete(cartClientsTable)
+      .where(
+        and(
+          eq(cartClientsTable.clients_id, clientId),
+          eq(cartClientsTable.items_id, itemId)
+        )
+      );
+
+    return deletedItem;
+  }
+};
+
 export default {
   getClientById,
   deleteClient,
@@ -206,4 +311,7 @@ export default {
   createAddress,
   updateAddress,
   deleteAddress,
+  addCart,
+  removeCart,
+  getCartByClientId,
 };

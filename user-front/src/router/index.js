@@ -1,10 +1,10 @@
-import path from "path";
 import { createRouter, createWebHistory } from "vue-router";
 
 const HomeView = () => import("../views/HomeView.vue");
 const Cart = () => import("../views/CartView.vue");
 const ShippingView = () => import("../views/ShippingView.vue");
 const ClientProfileView = () => import("../views/ClientProfileView.vue");
+const PaymentView = () => import("../views/PaymentView.vue");
 
 const routes = [
   {
@@ -28,6 +28,12 @@ const routes = [
     path: "/profile",
     name: "ClientProfileView",
     component: ClientProfileView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/checkout/payment",
+    name: "PaymentView",
+    component: PaymentView,
     meta: { requiresAuth: true },
   },
   // NO AUTH REDIRECT TO HOME

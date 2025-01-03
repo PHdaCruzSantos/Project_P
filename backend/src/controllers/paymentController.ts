@@ -1,63 +1,54 @@
 import { Request, Response } from "express";
-import { CreatePayment } from "@/services/paymentService";
-import clientsService from "@/services/clientServices"; // Assuming you have this service
+import paymentService from "../services/paymentService";
+import clientServices from "@/services/clientServices";
 
-export const initialPayment = async (req: Request, res: Response) => {
+interface PaymentRequestBody {
+  clientId: string;
+  value: number;
+  items: Array<{
+    name: string;
+    id: string;
+    quantity: number;
+  }>;
+  description?: string;
+  externalReference?: string;
+}
+
+export const createPayment = async (req: Request, res: Response) => {
   try {
-    const {
-      value,
-      description,
-      dueDate,
-      items,
-      clientId, // Add client ID from your system
-    } = req.body;
+    const paymentData: PaymentRequestBody = req.body;
 
-    if (!value || !dueDate || !clientId || !items) {
-      res.status(400).json({
-        message: "Missing required fields",
-      });
-    }
-
-    // Get client data from your system
-    const client = await clientsService.getClientById(clientId);
+    // Get client data
+    const client = await clientServices.getClientById(paymentData.clientId);
     if (!client) {
-      res.status(404).json({
-        message: "Client not found",
-      });
+      res.status(404).json({ error: "Client not found" });
     }
 
-    const customerData = {
-      name: client.name,
-      email: client.email,
-      cpfCnpj: client.cpf,
-      externalReference: clientId,
-    };
-    console.log("costumer data cpf", customerData);
-
-    const paymentData = {
-      customer: "", // Will be set by CreatePayment
-      billingType: "PIX" as const,
-      value,
-      dueDate,
-      description,
-      externalReference: `order-${Date.now()}`, // Generate order reference
-    };
-
-    const paymentResponse = await CreatePayment(
-      paymentData,
-      customerData,
-      items
-    );
-
-    res.status(200).json({
-      message: "Payment Successfully Created",
-      paymentId: paymentResponse.id,
-      pixQrCode: paymentResponse.pixQrCode,
-      pixQrCodeImage: paymentResponse.pixQrCodeImage,
-      orderReference: paymentResponse.externalReference,
+    const payment = await paymentService.createPixPayment({
+      value: paymentData.value,
+      customerName: client.name,
+      customerEmail: client.email,
+      customerCpfCnpj: client.cpf,
+      description: `Order items: ${paymentData.items
+        .map((item) => `${item.quantity}x ${item.name}`)
+        .join(", ")}`,
+      externalReference: `order_${client.id}_${Date.now()}`,
     });
+
+    res.status(201).json(payment);
   } catch (error) {
-    console.error("Error initiating payment:", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Payment creation error:", error);
+    res.status(500).json({ error: "Failed to create payment" });
+  }
+};
+
+export const getPaymentStatus = async (req: Request, res: Response) => {
+  try {
+    const { paymentId } = req.params;
+    const status = await paymentService.checkPaymentStatus(paymentId);
+    res.json({ status });
+  } catch (error) {
+    console.error("Payment status check error:", error);
+    res.status(500).json({ error: "Failed to check payment status" });
   }
 };

@@ -1,9 +1,13 @@
 import { Router } from "express";
-import { initialPayment } from "@/controllers/paymentController";
+import {
+  createPayment,
+  getPaymentStatus,
+} from "../controllers/paymentController";
 import { authMiddleware } from "@/middlewares/authMiddleware";
 
 const paymentRouter = Router();
 
-paymentRouter.post("/payment", authMiddleware, initialPayment);
+paymentRouter.post("/create", authMiddleware, createPayment);
+paymentRouter.get("/status/:paymentId", authMiddleware, getPaymentStatus);
 
 export default paymentRouter;

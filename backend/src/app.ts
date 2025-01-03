@@ -37,6 +37,6 @@ app.use("/api", userRouter);
 app.use("/api", storeRouter);
 app.use("/api", itemsRouter);
 app.use("/api", clientRouter);
-app.use("/api", paymentRouter);
 app.use("/api", shippingRouter);
+app.use("/payment", paymentRouter);
 app.use("/upload", uploadRoutes);

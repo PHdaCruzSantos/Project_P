@@ -51,10 +51,45 @@ const getClientAddresses = async (clientId) => {
   return await response.json();
 };
 
+const getCartByClientId = async (clientId) => {
+  const response = await fetch(`${apiUrl}/api/client/${clientId}/cart`, {
+    credentials: "include",
+  });
+  if (!response.ok) throw new Error("Failed to get cart");
+  return await response.json();
+};
+
+const addCartItem = async (clientId, itemId) => {
+  const response = await fetch(
+    `${apiUrl}/api/client/${clientId}/cart/${itemId}`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
+  );
+  if (!response.ok) throw new Error("Failed to add item to cart");
+  return await response.json();
+};
+
+const removeCartItem = async (clientId, itemId) => {
+  const response = await fetch(
+    `${apiUrl}/api/client/${clientId}/cart/${itemId}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+  if (!response.ok) throw new Error("Failed to remove item from cart");
+  return await response.json();
+};
+
 export default {
   getClient,
   updateClient,
   toggleFavorite,
   getFavorites,
   getClientAddresses,
+  getCartByClientId,
+  addCartItem,
+  removeCartItem,
 };

@@ -69,7 +69,7 @@
                 :key="rate.id"
                 :value="rate"
                 :label="`${rate.name} - ${formatPrice(rate.price)} 
-                         (${rate.delivery_time} days)`"
+                   (${rate.delivery_time} days)`"
               />
             </v-radio-group>
             <v-progress-circular
@@ -134,11 +134,14 @@
 </template>
 
 <script>
-import { ref, computed, watch, onMounted } from "vue";
-import { useCartStore } from "@/stores/cartStore";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useClientStore } from "@/stores/clientsStore";
+import { useShippingStore } from "@/stores/shippingStore";
+import { usePaymentStore } from "@/stores/paymentStore";
+
 import clientsApi from "@/utils/api/clientsApi";
 import shippingApi from "@/utils/api/shippingApi";
+import { useRouter } from "vue-router";
 import {
   VContainer,
   VCard,
@@ -180,23 +183,24 @@ export default {
     VChip,
     VCardActions,
   },
-
-  setup(props) {
-    const cartStore = useCartStore();
+  setup() {
     const clientStore = useClientStore();
-
+    const shippingStore = useShippingStore();
+    const route = useRouter();
     const addresses = ref([]);
     const selectedAddress = ref(null);
     const loadingAddresses = ref(false);
     const loadingShipping = ref({});
     const shippingRates = ref({});
+    const isLoggedIn = computed(() => useClientStore.user);
     const selectedShipping = ref({});
     const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
 
+    const selectedItems = computed(() => shippingStore.selectedProducts);
     // Group items by store
     const itemsByStore = computed(() => {
       const groups = {};
-      cartStore.items.forEach((item) => {
+      selectedItems.value.forEach((item) => {
         if (!groups[item.store_id]) {
           groups[item.store_id] = {
             storeName: `Store ${item.store_id}`, // Replace with actual store name
@@ -255,7 +259,18 @@ export default {
         };
 
         const rates = await shippingApi.calculateShipping(shippingData);
-        shippingRates.value[storeId] = rates;
+
+        // Sort rates by delivery time (ascending)
+        const sortedRates = rates.sort(
+          (a, b) => a.delivery_time - b.delivery_time
+        );
+
+        shippingRates.value[storeId] = sortedRates;
+
+        // Automatically select the fastest shipping option
+        if (sortedRates.length > 0) {
+          selectedShipping.value[storeId] = sortedRates[0];
+        }
       } catch (error) {
         console.error("Failed to calculate shipping:", error);
       } finally {
@@ -293,10 +308,11 @@ export default {
     };
 
     const calculateShippingTotal = () => {
-      return Object.values(selectedShipping.value).reduce(
-        (sum, shipping) => sum + shipping.price,
-        0
-      );
+      if (!selectedShipping.value) return 0;
+
+      return Object.values(selectedShipping.value)
+        .filter((shipping) => shipping && shipping.price)
+        .reduce((total, shipping) => total + Number(shipping.price), 0);
     };
 
     const calculateGrandTotal = () => {
@@ -313,21 +329,38 @@ export default {
     });
 
     const proceedToPayment = () => {
-      // Save shipping details to cart store
-      cartStore.$patch({
+      const paymentStore = usePaymentStore();
+
+      paymentStore.setOrderData({
+        items: shippingStore.selectedProducts,
         shipping: {
           address: selectedAddress.value,
           rates: selectedShipping.value,
-          total: calculateShippingTotal(),
+        },
+        totals: {
+          itemsTotal: calculateTotal(),
+          shippingTotal: calculateShippingTotal(),
+          grandTotal: calculateGrandTotal(),
         },
       });
-
-      // Navigate to payment
-      router.push("/checkout/payment");
+      route.push("/checkout/payment");
     };
 
     onMounted(() => {
+      if (!isLoggedIn) {
+        route.push("/");
+        return;
+      }
+      if (!shippingStore.selectedProducts.length) {
+        route.push("/cart");
+        return;
+      }
       loadAddresses();
+    });
+
+    onUnmounted(() => {
+      // Clear shipping data when leaving component
+      shippingStore.clearShippingData();
     });
 
     return {

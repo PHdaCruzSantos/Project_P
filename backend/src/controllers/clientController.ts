@@ -142,3 +142,35 @@ export const deleteClientAddress = async (req: Request, res: Response) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+export const getCartByClientId = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const cart = await clientServices.getCartByClientId(clientId);
+    res.status(200).json(cart);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const addCart = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const itemId = req.params.itemId;
+    const cart = await clientServices.addCart(clientId, itemId);
+    res.status(201).json(cart);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const removeCart = async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId;
+    const itemId = req.params.itemId;
+    const cart = await clientServices.removeCart(clientId, itemId);
+    res.status(200).json(cart);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

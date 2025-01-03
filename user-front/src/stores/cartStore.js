@@ -1,5 +1,7 @@
 // src/stores/cartStore.js
 import { defineStore } from "pinia";
+import clientsApi from "../utils/api/clientsApi";
+import itemsApi from "../utils/api/itemsApi";
 
 export const useCartStore = defineStore("cart", {
   state: () => ({
@@ -47,13 +49,39 @@ export const useCartStore = defineStore("cart", {
       );
     },
 
-    loadCart() {
+    async loadCart() {
       if (!this.userId) return;
       const saved = localStorage.getItem(`cart_${this.userId}`);
       if (saved) {
         const data = JSON.parse(saved);
         this.items = data.items;
         this.contCartItems = data.contCartItems;
+        return;
+      }
+      try {
+        const dbCart = await clientsApi.getCartByClientId(this.userId);
+        if (dbCart && dbCart.items > 0) {
+          const cartItems = await Promise.all(
+            dbCart.map(async (cartItems) => {
+              const itemDetails = await itemsApi.getAllInfoItem(
+                cartItems.item_id
+              );
+              return {
+                ...itemDetails.item,
+                quantity: cartItems.quantity,
+                image_names: itemDetails.item.image_names?.split(",")[0] || "",
+              };
+            })
+          );
+          this.items = cartItems;
+          this.contCartItems = cartItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0
+          );
+          this.saveCart();
+        }
+      } catch (error) {
+        console.error("Failed to load cart", error);
       }
     },
     updateItemQuantity(itemId, quantity) {
