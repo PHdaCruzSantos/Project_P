@@ -5,6 +5,8 @@ const Cart = () => import("../views/CartView.vue");
 const ShippingView = () => import("../views/ShippingView.vue");
 const ClientProfileView = () => import("../views/ClientProfileView.vue");
 const PaymentView = () => import("../views/PaymentView.vue");
+const OrderConfirmationView = () => import("../views/OrderConfirmation.vue");
+const NewOrderView = () => import("../views/NewOrderView.vue");
 
 const routes = [
   {
@@ -25,10 +27,11 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: "/profile",
+    path: "/profile/:tab?",
     name: "ClientProfileView",
     component: ClientProfileView,
     meta: { requiresAuth: true },
+    props: true,
   },
   {
     path: "/checkout/payment",
@@ -36,6 +39,19 @@ const routes = [
     component: PaymentView,
     meta: { requiresAuth: true },
   },
+  {
+    path: "/order-confirmation",
+    name: "OrderConfirmation",
+    component: OrderConfirmationView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/new-order",
+    name: "NewOrderView",
+    component: NewOrderView,
+    meta: { requiresAuth: true },
+  },
+
   // NO AUTH REDIRECT TO HOME
   {
     path: "/:pathMatch(.*)*",

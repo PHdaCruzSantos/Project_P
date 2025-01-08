@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import {
   sqliteTable,
   text,
@@ -251,3 +251,51 @@ export const cartClientsTable = sqliteTable("cartClients", {
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
 });
+export const ordersTable = sqliteTable("orders", {
+  id: text("id").primaryKey().notNull(), // UUID do pedido
+  clients_id: text("clients_id") // UUID do cliente
+    .notNull()
+    .references(() => clientsTable.id),
+  payment_id: text("payment_id"), // ID do pagamento no ASAAS
+  status: text("status").notNull(), // pending, paid, cancelled, delivered
+  total_amount: real("total_amount").notNull(), // Valor total do pedido
+  payment_method: text("payment_method"), // PIX, credit_card, etc
+  shipping_address: text("shipping_address").notNull(), // Endereço de entrega
+  shipping_price: real("shipping_price").notNull(), // Valor do frete
+  tracking_code: text("tracking_code"), // Código de rastreamento
+  notes: text("notes"), // Observações do pedido
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updated_at: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Tabela de itens do pedido
+export const orderItemsTable = sqliteTable("order_items", {
+  id: text("id").primaryKey().notNull(), // UUID do item do pedido
+  order_id: text("order_id") // UUID do pedido
+    .notNull()
+    .references(() => ordersTable.id),
+  item_id: text("item_id") // UUID do item
+    .notNull()
+    .references(() => itemsTable.id),
+  quantity: integer("quantity").notNull(), // Quantidade do item
+  price: real("price").notNull(), // Preço unitário do item no momento da compra
+  item_name: text("item_name").notNull(), // Nome do item no momento da compra
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const ordersRelations = relations(ordersTable, ({ many }) => ({
+  items: many(orderItemsTable),
+}));
+
+export const orderItemsRelations = relations(orderItemsTable, ({ one }) => ({
+  order: one(ordersTable, {
+    fields: [orderItemsTable.order_id],
+    references: [ordersTable.id],
+  }),
+}));

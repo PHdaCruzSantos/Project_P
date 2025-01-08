@@ -23,7 +23,7 @@ export const useCartStore = defineStore("cart", {
       this.loadCart();
     },
 
-    addToCart(item) {
+    async addToCart(item) {
       const existingItem = this.items.find((i) => i.id === item.id);
       if (existingItem) {
         existingItem.quantity += 1;
@@ -36,6 +36,15 @@ export const useCartStore = defineStore("cart", {
       }
       this.contCartItems += 1;
       this.saveCart();
+
+      try {
+        if (this.userId) {
+          await clientsApi.addCartItem(this.userId, item.id);
+        }
+      } catch (error) {
+        console.error("Failed to add item to cart", error);
+        await this.loadCart();
+      }
     },
 
     saveCart() {
@@ -84,20 +93,92 @@ export const useCartStore = defineStore("cart", {
         console.error("Failed to load cart", error);
       }
     },
-    updateItemQuantity(itemId, quantity) {
+    async updateItemQuantity(itemId, quantity) {
       const item = this.items.find((i) => i.id === itemId);
-      if (item) {
-        const diff = quantity - item.quantity;
-        item.quantity = quantity;
-        this.contCartItems += diff;
+      if (!item) return;
+      const oldQuantity = item.quantity;
+      const diff = quantity - oldQuantity;
+
+      // Optimistic local update
+      item.quantity = quantity;
+      this.contCartItems += diff;
+      this.saveCart();
+
+      // Sync with database
+      try {
+        if (this.userId) {
+          if (diff > 0) {
+            // Add items
+            for (let i = 0; i < diff; i++) {
+              await clientsApi.addCartItem(this.userId, itemId);
+            }
+          } else if (diff < 0) {
+            // Remove items
+            for (let i = 0; i > diff; i--) {
+              await clientsApi.removeCartItem(this.userId, itemId);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to sync quantity with database:", error);
+        // Revert on failure
+        item.quantity = oldQuantity;
+        this.contCartItems -= diff;
         this.saveCart();
       }
     },
 
-    clearCart() {
+    async removeItem(itemId) {
+      const itemIndex = this.items.findIndex((i) => i.id === itemId);
+      if (itemIndex === -1) return;
+
+      const item = this.items[itemIndex];
+      const quantity = item.quantity;
+
+      // Optimistic local update
+      this.items.splice(itemIndex, 1);
+      this.contCartItems -= quantity;
+      this.saveCart();
+
+      // Sync with database
+      try {
+        if (this.userId) {
+          await clientsApi.removeCartItem(this.userId, itemId);
+        }
+      } catch (error) {
+        console.error("Failed to remove item from database:", error);
+        // Revert on failure
+        this.items.splice(itemIndex, 0, item);
+        this.contCartItems += quantity;
+        this.saveCart();
+      }
+    },
+
+    async clearCart() {
+      const oldItems = [...this.items];
+      const oldCount = this.contCartItems;
+
+      // Optimistic local update
       this.items = [];
       this.contCartItems = 0;
       this.saveCart();
+
+      // Sync with database
+      try {
+        if (this.userId) {
+          await Promise.all(
+            oldItems.map((item) =>
+              clientsApi.removeCartItem(this.userId, item.id)
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Failed to clear cart in database:", error);
+        // Revert on failure
+        this.items = oldItems;
+        this.contCartItems = oldCount;
+        this.saveCart();
+      }
     },
   },
 });

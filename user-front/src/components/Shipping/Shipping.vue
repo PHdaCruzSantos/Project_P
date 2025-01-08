@@ -138,7 +138,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useClientStore } from "@/stores/clientsStore";
 import { useShippingStore } from "@/stores/shippingStore";
 import { usePaymentStore } from "@/stores/paymentStore";
-
+import orderApi from "@/utils/api/orderApi";
 import clientsApi from "@/utils/api/clientsApi";
 import shippingApi from "@/utils/api/shippingApi";
 import { useRouter } from "vue-router";
@@ -328,22 +328,82 @@ export default {
       );
     });
 
-    const proceedToPayment = () => {
+    const formatShippingAddress = (address) => {
+      return `${address.street}, ${address.number} ${
+        address.complement || ""
+      }, ${address.neighborhood}, ${address.city} - ${address.state}, ${
+        address.cep
+      }`;
+    };
+
+    const saveOrder = async () => {
+      try {
+        // Format items as required by API
+        const formattedItems = shippingStore.selectedProducts.map((item) => ({
+          item_id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          item_name: item.name,
+        }));
+
+        // Calculate total amount in cents
+        const totalInCents = Math.round(calculateGrandTotal() * 100);
+
+        const orderData = {
+          clients_id: clientStore.currentUser.id,
+          payment_id: null, // Will be set after payment processing
+          status: "pending",
+          total_amount: totalInCents,
+          payment_method: null, // Will be set in payment step
+          shipping_address: formatShippingAddress(selectedAddress.value),
+          shipping_price: calculateShippingTotal(),
+          items: formattedItems,
+        };
+
+        // Create order in backend
+
+        console.log("order", orderData);
+        const order = await orderApi.createOrder(orderData);
+      } catch (error) {
+        console.error("Failed to create order:", error);
+      }
+    };
+
+    const proceedToPayment = async () => {
       const paymentStore = usePaymentStore();
 
-      paymentStore.setOrderData({
-        items: shippingStore.selectedProducts,
-        shipping: {
-          address: selectedAddress.value,
-          rates: selectedShipping.value,
-        },
-        totals: {
-          itemsTotal: calculateTotal(),
-          shippingTotal: calculateShippingTotal(),
-          grandTotal: calculateGrandTotal(),
-        },
-      });
-      route.push("/checkout/payment");
+      try {
+        // Prepare order data
+        const orderData = {
+          items: shippingStore.selectedProducts,
+          shipping: {
+            address: selectedAddress.value,
+            rates: selectedShipping.value,
+          },
+          totals: {
+            itemsTotal: calculateTotal(),
+            shippingTotal: calculateShippingTotal(),
+            grandTotal: calculateGrandTotal(),
+          },
+          status: "pending",
+          client_id: clientStore.currentUser.id,
+          stores: Object.keys(itemsByStore.value).map((storeId) => ({
+            store_id: storeId,
+            shipping_rate: selectedShipping.value[storeId],
+            items: itemsByStore.value[storeId].items,
+          })),
+        };
+        saveOrder();
+        paymentStore.setOrderData({
+          ...orderData,
+        });
+
+        // Navigate to payment page
+        route.push("/checkout/payment");
+      } catch (error) {
+        console.error("Failed to create order:", error);
+        // Here you might want to show an error notification to the user
+      }
     };
 
     onMounted(() => {

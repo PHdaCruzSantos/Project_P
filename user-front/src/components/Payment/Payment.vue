@@ -14,16 +14,6 @@
     </div>
 
     <!-- Payment Progress -->
-    <!--!FIXME - temporario -->
-    <v-stepper class="mb-6" :value="2">
-      <v-stepper-header>
-        <v-stepper-item color="#00ff33" value="1" title="Shipping" complete />
-        <v-divider />
-        <v-stepper-item value="2" title="Payment" complete />
-        <v-divider />
-        <v-stepper-item value="3" title="Review" />
-      </v-stepper-header>
-    </v-stepper>
 
     <v-row>
       <v-col cols="12" md="8">
@@ -174,7 +164,7 @@ export default {
     const orderTotal = computed(() => paymentStore.totals.itemsTotal);
     const shippingTotal = computed(() => paymentStore.totals.shippingTotal);
     const grandTotal = computed(() => paymentStore.totals.grandTotal);
-
+    console.log(paymentStore);
     const formatPaymentData = () => {
       return {
         clientId: clientsStore.currentUser.id,

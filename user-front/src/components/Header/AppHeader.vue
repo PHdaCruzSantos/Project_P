@@ -90,22 +90,19 @@
 
             <v-list density="compact" nav>
               <v-list-item
-                to="/profile"
                 prepend-icon="mdi-account-circle"
                 title="My Profile"
-                @click="userMenu = false"
+                @click="(userMenu = false), goToProfile('info')"
               />
               <v-list-item
-                to="/orders"
                 prepend-icon="mdi-package-variant"
                 title="My Orders"
-                @click="userMenu = false"
+                @click="(userMenu = false), goToProfile('orders')"
               />
               <v-list-item
-                to="/favorites"
                 prepend-icon="mdi-heart"
                 title="Favorites"
-                @click="userMenu = false"
+                @click="(userMenu = false), goToProfile('favorites')"
               />
               <v-divider />
               <v-list-item
@@ -327,6 +324,14 @@ export default {
       }
     };
 
+    const goToProfile = (tab) => {
+      console.log(tab);
+      router.push({
+        name: "ClientProfileView",
+        params: { tab },
+      });
+    };
+
     const toggleMode = () => {
       isRegisterMode.value = !isRegisterMode.value;
       form.value?.reset();
@@ -355,6 +360,7 @@ export default {
       cartItemCount: computed(() => cartStore.itemCount),
       URL_BACKEND,
       goToCart,
+      goToProfile,
     };
   },
 };

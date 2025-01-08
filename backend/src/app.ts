@@ -11,6 +11,7 @@ import storeRouter from "./routes/storesRoutes";
 import clientRouter from "./routes/clientRoutes";
 import paymentRouter from "./routes/paymentRoutes";
 import shippingRouter from "./routes/shippingRoutes";
+import orderRoutes from "./routes/orderRoutes";
 import uploadRoutes from "./upload";
 
 export const app = express();
@@ -38,5 +39,6 @@ app.use("/api", storeRouter);
 app.use("/api", itemsRouter);
 app.use("/api", clientRouter);
 app.use("/api", shippingRouter);
+app.use("/api", orderRoutes);
 app.use("/payment", paymentRouter);
 app.use("/upload", uploadRoutes);

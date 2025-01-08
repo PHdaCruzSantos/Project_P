@@ -111,29 +111,83 @@
             <!-- Orders Tab -->
             <v-window-item value="orders">
               <v-card-text>
-                <v-timeline>
+                <v-timeline density="compact" align="start">
                   <v-timeline-item
                     v-for="order in orders"
                     :key="order.id"
                     size="small"
+                    :dot-color="getStatusColor(order.status)"
                   >
-                    <template v-slot:opposite>
-                      {{ formatDate(order.created_at) }}
-                    </template>
                     <v-card>
-                      <v-card-title class="text-h6">
-                        Order #{{ order.id }}
+                      <v-card-title class="text-subtitle-1">
+                        Order #{{ order.id.slice(0, 8) }}
                       </v-card-title>
                       <v-card-text>
-                        <p>Status: {{ order.status }}</p>
-                        <p>Total: {{ formatPrice(order.total) }}</p>
-                        <v-chip :color="getStatusColor(order.status)">
-                          {{ order.status }}
-                        </v-chip>
+                        <v-row>
+                          <v-col cols="12" sm="6">
+                            <p>
+                              <strong>Date:</strong>
+                              {{ formatDate(order.created_at) }}
+                            </p>
+                            <p>
+                              <strong>Total:</strong>
+                              {{ formatPrice(order.total_amount) }}
+                            </p>
+                            <p>
+                              <strong>Status:</strong>
+                              <v-chip
+                                :color="getStatusColor(order.status)"
+                                size="small"
+                              >
+                                {{ order.status }}
+                              </v-chip>
+                            </p>
+                          </v-col>
+                          <v-col cols="12" sm="6">
+                            <p>
+                              <strong>Payment:</strong>
+                              {{ order.payment_method }}
+                            </p>
+                            <p>
+                              <strong>Shipping:</strong>
+                              {{ formatPrice(order.shipping_price) }}
+                            </p>
+                            <p>
+                              <strong>Address:</strong>
+                              {{ order.shipping_address }}
+                            </p>
+                          </v-col>
+                        </v-row>
+                        <v-expansion-panels variant="accordion">
+                          <v-expansion-panel title="Order Items">
+                            <v-expansion-panel-text>
+                              <v-list density="compact">
+                                <v-list-item
+                                  v-for="item in order.items"
+                                  :key="item.id"
+                                >
+                                  <v-list-item-title>
+                                    {{ item.item_name }} ({{ item.quantity }}x)
+                                  </v-list-item-title>
+                                  <v-list-item-subtitle>
+                                    {{ formatPrice(item.price) }} each
+                                  </v-list-item-subtitle>
+                                </v-list-item>
+                              </v-list>
+                            </v-expansion-panel-text>
+                          </v-expansion-panel>
+                        </v-expansion-panels>
                       </v-card-text>
                     </v-card>
                   </v-timeline-item>
                 </v-timeline>
+
+                <v-alert
+                  v-if="orders.length === 0"
+                  type="info"
+                  text="No orders found"
+                  class="mt-4"
+                />
               </v-card-text>
             </v-window-item>
 
@@ -304,13 +358,13 @@ import {
   VDialog,
 } from "vuetify/components";
 
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useClientStore } from "@/stores/clientsStore";
 import { useCartStore } from "@/stores/cartStore";
 import clientsApi from "@/utils/api/clientsApi";
 import itemsApi from "@/utils/api/itemsApi";
 import { useRouter } from "vue-router";
-
+import orderApi from "@/utils/api/orderApi";
 export default {
   name: "ClientProfile",
   components: {
@@ -336,12 +390,20 @@ export default {
     VChip,
     VDialog,
   },
-  setup() {
+  props: {
+    // !FIXME - props error
+    tab: {
+      // type: String,
+      default: "info",
+    },
+  },
+  setup(props) {
     const clientStore = useClientStore();
     const cartStore = useCartStore();
     const loading = ref(false);
     const addressDialog = ref(false);
-    const activeTab = ref("info");
+    console.log(props.tab);
+    const activeTab = ref(props.tab);
     const addresses = ref([]);
     const orders = ref([]);
     const favoriteItems = ref([]);
@@ -444,15 +506,14 @@ export default {
         addresses.value = addressesData;
 
         loadingFavorites.value = true;
+        await loadOrders();
         if (userData.fav_items) {
           const favoriteIds = userData.fav_items.split(",").filter((id) => id); // Remove empty strings
           try {
             const itemPromises = favoriteIds.map((id) =>
               itemsApi.getAllInfoItem(id)
             );
-            console.log("itemPromises", itemPromises);
             favoriteItems.value = await Promise.all(itemPromises);
-            console.log("favoriteItems", favoriteItems.value[0].item.name);
           } catch (error) {
             console.error("Failed to load favorite items:", error);
             favoriteItems.value = [];
@@ -478,6 +539,34 @@ export default {
     const formatDate = (date) => {
       return new Date(date).toLocaleDateString("pt-BR");
     };
+
+    const loadOrders = async () => {
+      try {
+        const ordersData = await orderApi.getClientOrders(
+          clientStore.currentUser.id
+        );
+        orders.value = ordersData;
+      } catch (error) {
+        console.error("Failed to load orders:", error);
+        orders.value = [];
+      }
+    };
+    const getStatusColor = (status) => {
+      const colors = {
+        pending: "warning",
+        paid: "success",
+        cancelled: "error",
+        delivered: "info",
+      };
+      return colors[status] || "grey";
+    };
+
+    watch(
+      () => props.tab,
+      (newTab) => {
+        activeTab.value = newTab;
+      }
+    );
 
     onMounted(async () => {
       if (clientStore.currentUser) {
@@ -507,6 +596,7 @@ export default {
       URL_BACKEND,
       getImageUrl,
       loadingFavorites,
+      getStatusColor,
     };
   },
 };
