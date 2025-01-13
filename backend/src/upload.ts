@@ -30,19 +30,19 @@ const upload = multer({ storage });
 
 uploadRoutes.post(
   "/add-image",
-  upload.single("file"),
+  upload.array("files", 10), // Changed to handle multiple files, max 10
   (req: Request, res: Response) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
     }
 
-    // Check if file was actually saved
-    const filePath = path.join(uploadDir, req.file.originalname);
-    if (fs.existsSync(filePath)) {
-      res.json({ message: "File uploaded successfully" });
-    } else {
-      res.status(500).json({ message: "Failed to save file" });
-    }
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [req.files];
+    const fileNames = uploadedFiles.map((file) => file.originalname);
+
+    res.json({
+      message: "Files uploaded successfully",
+      files: fileNames,
+    });
   }
 );
 

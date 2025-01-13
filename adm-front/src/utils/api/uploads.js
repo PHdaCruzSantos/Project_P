@@ -1,19 +1,12 @@
 const apiUrl = import.meta.env.VITE_API_URL_BACKEND;
 
-const uploadFile = async (file) => {
-  // Check if file exists in @upload folder
-  try {
-    const checkResponse = await fetch(`${apiUrl}/upload/images/${file.name}`);
-    if (checkResponse.ok) {
-      return { message: "File already exists" };
-    }
-  } catch (error) {
-    console.log("File not found in uploads, proceeding with upload");
-  }
-
-  // Upload file if not found
+const uploadFiles = async (files) => {
   const formData = new FormData();
-  formData.append("file", file);
+
+  // Add each file to formData
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
 
   const response = await fetch(`${apiUrl}/upload/add-image`, {
     method: "POST",
@@ -22,13 +15,12 @@ const uploadFile = async (file) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to upload file");
+    throw new Error("Failed to upload files");
   }
 
-  const text = await response.text();
-  return { message: text };
+  return await response.json();
 };
 
 export default {
-  uploadFile,
+  uploadFiles,
 };

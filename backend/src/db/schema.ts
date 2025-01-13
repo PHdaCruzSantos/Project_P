@@ -299,3 +299,34 @@ export const orderItemsRelations = relations(orderItemsTable, ({ one }) => ({
     references: [ordersTable.id],
   }),
 }));
+// Tabela de Promoções
+export const promotionsTable = sqliteTable("promotions", {
+  id: text("id").primaryKey().notNull(), // UUID para a promoção
+  name: text("name").notNull(), // Nome da promoção (ex: "Natal", "Black Friday")
+  description: text("description"), // Descrição opcional da promoção
+  start_date: integer("start_date", { mode: "timestamp" }).notNull(), // Data de início
+  end_date: integer("end_date", { mode: "timestamp" }).notNull(), // Data de término
+  status: text("status").notNull().default("active"), // Status da promoção (active, inactive)
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updated_at: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Tabela Relacional de Itens em Promoção
+export const promotionItemsTable = sqliteTable("promotion_items", {
+  id: text("id").primaryKey().notNull(), // UUID para a relação
+  promotion_id: text("promotion_id") // UUID da promoção
+    .notNull()
+    .references(() => promotionsTable.id),
+  item_id: text("item_id") // UUID do item
+    .notNull()
+    .references(() => itemsTable.id),
+  discount_percentage: real("discount_percentage").notNull(), // Percentual de desconto
+  discounted_price: real("discounted_price"), // Preço com desconto (calculado se necessário)
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});

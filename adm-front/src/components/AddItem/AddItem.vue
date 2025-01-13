@@ -130,11 +130,15 @@
             <v-file-input
               v-model="images"
               multiple
-              :rules="[(v) => v.length > 0 || 'At least one image is required']"
+              accept="image/*"
+              :rules="[
+                (v) => v?.length > 0 || 'At least one image is required',
+              ]"
               label="Upload Images"
               variant="outlined"
               dense
               class="styled-input"
+              @change="handleImageChange"
               required
             >
               <template #prepend>
@@ -197,9 +201,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import itemsApi from "../../utils/api/items";
 import storesApi from "../../utils/api/stores";
+import uploadApi from "@/utils/api/uploads";
 import { useRouter } from "vue-router";
 import palette from "../../../palette";
 import {
@@ -294,16 +299,6 @@ export default {
         console.error("Failed to fetch store infos:", error);
       }
     };
-    const handleImageChange = () => {
-      imagePreviews.value = [];
-      for (const file of images.value) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          imagePreviews.value.push(e.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
 
     const clearForm = () => {
       name.value = "";
@@ -321,28 +316,47 @@ export default {
 
     const handleSubmit = async () => {
       if (valid.value) {
-        const item = {
-          name: name.value,
-          description: description.value,
-          price: parseFloat(price.value),
-          category_id: categoriesObj.value.find(
-            (cat) => cat.name === category.value
-          ).id,
-          type: types.value,
-          image_names: images.value.map((file) => file.name),
-          status: status.value,
-        };
-
         try {
-          console.log("item", item);
+          // First upload images
+          const uploadedFiles = await uploadApi.uploadFiles(images.value);
+
+          const item = {
+            name: name.value,
+            description: description.value,
+            price: parseFloat(price.value),
+            category_id: categoriesObj.value.find(
+              (cat) => cat.name === category.value
+            ).id,
+            type: types.value,
+            image_names: uploadedFiles.files, // Use returned filenames
+            status: status.value,
+          };
+
+          // Then create item
           await itemsApi.addItem(props.storeId, item);
           clearForm();
+          router.push({ path: `/store/${props.storeId}` });
         } catch (error) {
           console.error("Failed to add item:", error);
         }
       }
     };
 
+    // Update image handlers
+    const handleImageChange = () => {
+      if (images.value && images.value.length > 0) {
+        imagePreviews.value = [];
+        Array.from(images.value).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imagePreviews.value.push(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    };
+
+    watch(images, handleImageChange);
     const addImage = (file) => {
       images.value.push(file);
     };

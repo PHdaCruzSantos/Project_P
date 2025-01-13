@@ -124,11 +124,9 @@
                         como toggle de status do item -->
                         <v-switch
                           v-if="!loadingSwitch[item.id]"
-                          :v-model="!!item.status"
-                          @change="toggleStatus(item)"
-                          :label="
-                            item.status === 'active' ? 'Active' : 'Inactive'
-                          "
+                          :model-value="item.status === 'active'"
+                          @update:model-value="toggleStatus(item)"
+                          :label="item.status"
                           color="primary"
                         >
                           <v-progress-circular
@@ -241,6 +239,7 @@ import {
   VAvatar,
 } from "vuetify/components";
 import palette from "../../../palette";
+import storesApi from "../../utils/api/stores";
 
 export default {
   name: "ProductsList",
@@ -284,9 +283,16 @@ export default {
       { text: "Actions", value: "actions" },
     ];
 
+    const fatchSotres = async () => {
+      const resStore = await storesApi.getStores(userStore.user.user.id);
+      storesStore.setStores(resStore);
+    };
+
     const fetchStoresWithItems = async () => {
       try {
+        await fatchSotres();
         const storesData = storesStore.stores;
+        console.log(storesData);
         for (const store of storesData) {
           const itemsResponse = await itemsApi.getItemsInStore(store.id);
           console.log(store.logo);
@@ -315,14 +321,18 @@ export default {
     };
 
     const toggleStatus = async (item) => {
-      if (loadingSwitch.value[item.id]) return; // Prevent multiple updates
+      if (loadingSwitch.value[item.id]) return;
+
       loadingSwitch.value[item.id] = true;
-      const newStatus = item.status ? "inactive" : "active";
+      const oldStatus = item.status;
+      const newStatus = item.status === "active" ? "inactive" : "active";
+
       try {
         await itemsApi.updateItem(item.id, { status: newStatus });
-        item.status = newStatus; // Update status in UI
+        item.status = newStatus;
       } catch (error) {
         console.error("Failed to update item status:", error);
+        item.status = oldStatus; // Revert on error
       } finally {
         loadingSwitch.value[item.id] = false;
       }
@@ -347,7 +357,6 @@ export default {
         router.push("/login");
       } else {
         fetchStoresWithItems();
-        console.log(userStore.user.user.id);
       }
     });
 
