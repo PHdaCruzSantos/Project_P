@@ -100,7 +100,7 @@
                         <v-col
                           cols="12"
                           sm="6"
-                          v-for="variant in itemInfo.variants"
+                          v-for="variant in itemInfo?.stock"
                           :key="variant.id"
                         >
                           <v-card
@@ -315,7 +315,8 @@ export default {
         loading.value = true;
         const data = await itemsApi.getAllInfoItem(props.item.id);
         itemInfo.value = data;
-        // console.log("Item info:", data);
+        console.log(itemInfo);
+        console.log(itemInfo.value.variants);
       } catch (error) {
         console.error("Failed to fetch item info:", error);
       } finally {

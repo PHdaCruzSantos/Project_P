@@ -5,6 +5,7 @@ export const getStores = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
     const stores = await storesServices.getStores(userId);
+    console.log(stores);
 
     res.status(200).json(stores);
   } catch (error) {

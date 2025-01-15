@@ -6,6 +6,7 @@
     outlined
     rounded="lg"
     @click="showItemDetails"
+    :style="cardOpacityStyle"
   >
     <!-- Image Carousel -->
     <v-carousel
@@ -29,6 +30,26 @@
         </template>
       </v-carousel-item>
     </v-carousel>
+
+    <div class="px-4 pt-2">
+      <v-chip
+        v-if="item.freeShipping"
+        color="success"
+        size="small"
+        class="mr-2"
+      >
+        <v-icon start size="small">mdi-truck-fast</v-icon>
+        Free Shipping
+      </v-chip>
+      <v-chip color="black" size="small" class="mr-2" text-color="white">
+        <v-icon start size="small">mdi-tag</v-icon>
+        Black Friday
+      </v-chip>
+      <v-chip v-if="item.discount" color="error" size="small">
+        <v-icon start size="small">mdi-sale</v-icon>
+        {{ item.discount }}% OFF
+      </v-chip>
+    </div>
 
     <!-- Content -->
     <v-card-title class="text-subtitle-1 font-weight-bold">
@@ -118,6 +139,7 @@ import {
   VRow,
   VCol,
   VSpacer,
+  VChip,
 } from "vuetify/components";
 
 export default {
@@ -126,6 +148,11 @@ export default {
     item: {
       type: Object,
       required: true,
+      default: () => ({
+        freeShipping: true,
+        isBlackFriday: true,
+        discount: 20,
+      }),
     },
   },
   components: {
@@ -144,6 +171,7 @@ export default {
     VCol,
     VSpacer,
     InfoItem,
+    VChip,
   },
   setup(props) {
     const showModal = ref(false);
@@ -203,6 +231,10 @@ export default {
       showModal.value = true;
     };
 
+    const cardOpacityStyle = computed(() => ({
+      opacity: props.item.status === "active" ? 1 : 0.6,
+    }));
+
     return {
       loading,
       processedImages,
@@ -215,6 +247,7 @@ export default {
       isFavorite,
       clientStore,
       showModal,
+      cardOpacityStyle,
     };
   },
 };

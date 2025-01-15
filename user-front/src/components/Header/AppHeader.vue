@@ -49,16 +49,17 @@
         >
           <template v-slot:activator="{ props }">
             <v-btn icon v-bind="props" class="ml-2">
-              <v-avatar size="32" color="primary">
-                <v-img
-                  v-if="user?.profile_image"
-                  :src="user.profile_image"
-                  @error="handleImageError"
-                />
-                <v-icon v-else :color="palette.lightblue[100]"
-                  >mdi-account</v-icon
-                >
+              <v-avatar
+                v-if="user.profile_image"
+                size="40"
+                :image="`${URL_BACKEND}/upload/images/${user.profile_image}`"
+                color="primary"
+                class="rounded-circle"
+              >
               </v-avatar>
+              <v-icon v-else :color="palette.lightblue[100]"
+                >mdi-account</v-icon
+              >
             </v-btn>
           </template>
 
@@ -342,6 +343,8 @@ export default {
       clientsStore.logout();
       userMenu.value = false;
     };
+
+    console.log(clientsStore.user);
 
     return {
       showLoginModal,

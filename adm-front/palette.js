@@ -5,7 +5,6 @@ const palette = {
     info: "#66B2FF", // Azul Brilhante - para mensagens informativas.
     graydark: "#3E4C59", // Cinza Escuro - texto secundário ou desativado.
     warning: "#FFB100", // Laranja Suave - para avisos.
-    danger: "#FF4C4C", // Vermelho Suave - para mensagens de erro.
     logo: "#0b3a54",
   },
 

@@ -29,17 +29,12 @@
           <v-list-item>
             <v-list-item-content>
               <v-list-item-title>
-                <strong>CPF:</strong>
-                <span v-if="user.cpf">{{ user.cpf }}</span>
-                <v-skeleton-loader v-else type="text"></v-skeleton-loader>
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title>
-                <v-avatar size="100" v-if="user.profile_image">
-                  <img :src="user.profile_image" alt="Profile" />
+                <v-avatar
+                  size="50"
+                  :image="`${URL_BACKEND}/upload/images/${user.profile_image}.png`"
+                  class="rounded-circle"
+                  v-if="user.profile_image"
+                >
                 </v-avatar>
                 <v-skeleton-loader v-else type="avatar"></v-skeleton-loader>
               </v-list-item-title>
@@ -183,6 +178,13 @@ export default {
         pendingApprovals: null,
       }),
     },
+  },
+  setup(props) {
+    const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
+    console.log(props.user.profile_image);
+    return {
+      URL_BACKEND,
+    };
   },
 };
 </script>

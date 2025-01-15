@@ -242,7 +242,7 @@ export default {
       if (!newBanner.value) return;
       uploading.value.banner = true;
       try {
-        const uploadResponse = await uploadsApi.uploadFile(newBanner.value);
+        const uploadResponse = await uploadsApi.uploadFiles(newBanner.value);
 
         if (uploadResponse.message) {
           await storesApi.updateStore(props.storeId, {

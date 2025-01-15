@@ -119,59 +119,170 @@
                     :dot-color="getStatusColor(order.status)"
                   >
                     <v-card>
-                      <v-card-title class="text-subtitle-1">
-                        Order #{{ order.id.slice(0, 8) }}
+                      <v-card-title
+                        class="d-flex align-center justify-space-between pa-4"
+                      >
+                        <span class="text-h6">
+                          Order #{{ order.id.slice(0, 8) }}
+                        </span>
+                        <div class="d-flex gap-2">
+                          <v-chip
+                            :color="getStatusColor(order.status)"
+                            size="small"
+                            class="text-uppercase"
+                            label
+                          >
+                            {{ order.status }}
+                          </v-chip>
+                          <v-chip
+                            :color="getPaymentStatusColor(order.payment_status)"
+                            size="small"
+                            class="text-uppercase"
+                            label
+                          >
+                            {{ getPaymentStatusLabel(order.payment_status) }}
+                          </v-chip>
+                        </div>
                       </v-card-title>
-                      <v-card-text>
+
+                      <v-divider></v-divider>
+
+                      <v-card-text class="pt-4">
                         <v-row>
                           <v-col cols="12" sm="6">
-                            <p>
-                              <strong>Date:</strong>
-                              {{ formatDate(order.created_at) }}
-                            </p>
-                            <p>
-                              <strong>Total:</strong>
-                              {{ formatPrice(order.total_amount) }}
-                            </p>
-                            <p>
-                              <strong>Status:</strong>
-                              <v-chip
-                                :color="getStatusColor(order.status)"
-                                size="small"
-                              >
-                                {{ order.status }}
-                              </v-chip>
-                            </p>
+                            <v-list density="compact">
+                              <v-list-item>
+                                <template v-slot:prepend>
+                                  <v-icon size="small" class="me-2"
+                                    >mdi-calendar</v-icon
+                                  >
+                                </template>
+                                <v-list-item-title>
+                                  {{ formatDate(order.created_at) }}
+                                </v-list-item-title>
+                                <v-list-item-subtitle
+                                  >Order Date</v-list-item-subtitle
+                                >
+                              </v-list-item>
+
+                              <v-list-item>
+                                <template v-slot:prepend>
+                                  <v-icon size="small" class="me-2"
+                                    >mdi-cash</v-icon
+                                  >
+                                </template>
+                                <v-list-item-title
+                                  class="font-weight-bold primary--text"
+                                >
+                                  {{ formatPrice(order.total_amount) }}
+                                </v-list-item-title>
+                                <v-list-item-subtitle
+                                  >Total Amount</v-list-item-subtitle
+                                >
+                              </v-list-item>
+                            </v-list>
                           </v-col>
+
                           <v-col cols="12" sm="6">
-                            <p>
-                              <strong>Payment:</strong>
-                              {{ order.payment_method }}
-                            </p>
-                            <p>
-                              <strong>Shipping:</strong>
-                              {{ formatPrice(order.shipping_price) }}
-                            </p>
-                            <p>
-                              <strong>Address:</strong>
-                              {{ order.shipping_address }}
-                            </p>
+                            <v-list density="compact">
+                              <v-list-item>
+                                <template v-slot:prepend>
+                                  <v-icon size="small" class="me-2"
+                                    >mdi-credit-card</v-icon
+                                  >
+                                </template>
+                                <v-list-item-title>
+                                  {{ order.payment_method || "Not specified" }}
+                                </v-list-item-title>
+                                <v-list-item-subtitle
+                                  >Payment Method</v-list-item-subtitle
+                                >
+                              </v-list-item>
+
+                              <v-list-item>
+                                <template v-slot:prepend>
+                                  <v-icon size="small" class="me-2"
+                                    >mdi-truck</v-icon
+                                  >
+                                </template>
+                                <v-list-item-title>
+                                  {{ formatPrice(order.shipping_price) }}
+                                </v-list-item-title>
+                                <v-list-item-subtitle
+                                  >Shipping Cost</v-list-item-subtitle
+                                >
+                              </v-list-item>
+                            </v-list>
                           </v-col>
                         </v-row>
-                        <v-expansion-panels variant="accordion">
-                          <v-expansion-panel title="Order Items">
+
+                        <v-divider class="my-3"></v-divider>
+
+                        <div class="mb-3">
+                          <div class="text-subtitle-2 mb-2">
+                            Shipping Address
+                          </div>
+                          <v-chip variant="outlined" class="pa-2">
+                            <v-icon start size="small">mdi-map-marker</v-icon>
+                            {{ order.shipping_address }}
+                          </v-chip>
+                        </div>
+
+                        <v-expansion-panels>
+                          <v-expansion-panel>
+                            <v-expansion-panel-title>
+                              <div class="d-flex align-center">
+                                <v-icon start size="small" class="me-2"
+                                  >mdi-package</v-icon
+                                >
+                                Order Items ({{ order.items.length }})
+                              </div>
+                            </v-expansion-panel-title>
                             <v-expansion-panel-text>
-                              <v-list density="compact">
+                              <v-list lines="two" density="comfortable">
                                 <v-list-item
                                   v-for="item in order.items"
                                   :key="item.id"
+                                  class="py-2"
                                 >
-                                  <v-list-item-title>
-                                    {{ item.item_name }} ({{ item.quantity }}x)
+                                  <template v-slot:prepend>
+                                    <v-avatar
+                                      size="48"
+                                      color="grey-lighten-3"
+                                      rounded
+                                    >
+                                      <v-img
+                                        v-if="item.image"
+                                        :src="item.image"
+                                        cover
+                                      ></v-img>
+                                      <v-icon v-else
+                                        >mdi-package-variant-closed</v-icon
+                                      >
+                                    </v-avatar>
+                                  </template>
+
+                                  <v-list-item-title class="font-weight-medium">
+                                    {{ item.item_name }}
                                   </v-list-item-title>
                                   <v-list-item-subtitle>
-                                    {{ formatPrice(item.price) }} each
+                                    <span class="me-2"
+                                      >Quantity: {{ item.quantity }}x</span
+                                    >
+                                    <span class="primary--text"
+                                      >{{ formatPrice(item.price) }} each</span
+                                    >
                                   </v-list-item-subtitle>
+
+                                  <template v-slot:append>
+                                    <span
+                                      class="text-primary font-weight-medium"
+                                    >
+                                      {{
+                                        formatPrice(item.price * item.quantity)
+                                      }}
+                                    </span>
+                                  </template>
                                 </v-list-item>
                               </v-list>
                             </v-expansion-panel-text>
@@ -356,15 +467,25 @@ import {
   VCardActions,
   VChip,
   VDialog,
+  VDivider,
+  VList,
+  VListItem,
+  VListItemTitle,
+  VListItemSubtitle,
+  VExpansionPanels,
+  VExpansionPanel,
+  VExpansionPanelTitle,
+  VExpansionPanelText,
 } from "vuetify/components";
 
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, onUnmounted } from "vue";
 import { useClientStore } from "@/stores/clientsStore";
 import { useCartStore } from "@/stores/cartStore";
 import clientsApi from "@/utils/api/clientsApi";
 import itemsApi from "@/utils/api/itemsApi";
 import { useRouter } from "vue-router";
 import orderApi from "@/utils/api/orderApi";
+import paymentApi from "@/utils/api/paymentApi";
 export default {
   name: "ClientProfile",
   components: {
@@ -389,9 +510,17 @@ export default {
     VCardActions,
     VChip,
     VDialog,
+    VDivider,
+    VList,
+    VListItem,
+    VListItemTitle,
+    VListItemSubtitle,
+    VExpansionPanels,
+    VExpansionPanel,
+    VExpansionPanelTitle,
+    VExpansionPanelText,
   },
   props: {
-    // !FIXME - props error
     tab: {
       // type: String,
       default: "info",
@@ -402,8 +531,7 @@ export default {
     const cartStore = useCartStore();
     const loading = ref(false);
     const addressDialog = ref(false);
-    console.log(props.tab);
-    const activeTab = ref(props.tab);
+    const activeTab = ref(`${props.tab}`);
     const addresses = ref([]);
     const orders = ref([]);
     const favoriteItems = ref([]);
@@ -419,6 +547,26 @@ export default {
       state: "",
       country: "Brasil",
     });
+
+    const getPaymentStatusColor = (status) => {
+      const colors = {
+        paid: "success",
+        pending: "warning",
+        failed: "error",
+        null: "grey",
+      };
+      return colors[status] || "grey";
+    };
+
+    const getPaymentStatusLabel = (status) => {
+      if (!status) return "Payment Pending";
+      const labels = {
+        paid: "Payment Confirmed",
+        pending: "Payment Pending",
+        failed: "Payment Failed",
+      };
+      return labels[status] || status;
+    };
 
     const showAddAddressDialog = () => {
       editedAddress.value = {
@@ -540,17 +688,104 @@ export default {
       return new Date(date).toLocaleDateString("pt-BR");
     };
 
+    const paymentCheckIntervals = ref(new Map());
+
+    // Função para verificar o status do pagamento
+    const checkPaymentStatus = async (order) => {
+      try {
+        if (!order.payment_id) return;
+
+        const status = await paymentApi.getPaymentStatus(order.payment_id);
+        console.log(status);
+
+        // Se o status mudou, atualiza o pedido
+        if (status !== order.payment_status) {
+          const orderIndex = orders.value.findIndex((o) => o.id === order.id);
+          if (orderIndex !== -1) {
+            // Cria uma cópia do pedido com o novo status
+            const updatedOrder = {
+              ...orders.value[orderIndex],
+              payment_status: status,
+            };
+
+            // Atualiza o array de pedidos
+            orders.value = [
+              ...orders.value.slice(0, orderIndex),
+              updatedOrder,
+              ...orders.value.slice(orderIndex + 1),
+            ];
+
+            // Se o pagamento foi confirmado ou falhou, para a verificação
+            if (status === "paid" || status === "failed") {
+              clearInterval(paymentCheckIntervals.value.get(order.id));
+              paymentCheckIntervals.value.delete(order.id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Failed to check payment status for order ${order.id}:`,
+          error
+        );
+      }
+    };
+
+    // Função para iniciar a verificação de pagamento para um pedido
+    const startPaymentStatusCheck = (order) => {
+      // Só inicia a verificação se o pedido tiver ID de pagamento e não estiver em estado final
+      if (
+        order.payment_id &&
+        (!order.payment_status || order.payment_status === "pending")
+      ) {
+        // Verifica imediatamente
+        checkPaymentStatus(order);
+
+        // Configura verificação periódica a cada 30 segundos
+        const intervalId = setInterval(() => checkPaymentStatus(order), 30000);
+        paymentCheckIntervals.value.set(order.id, intervalId);
+      }
+    };
+
+    // Função para iniciar verificação de pagamento para todos os pedidos pendentes
+    const startAllPaymentChecks = () => {
+      // Limpa intervalos existentes
+      paymentCheckIntervals.value.forEach((intervalId) =>
+        clearInterval(intervalId)
+      );
+      paymentCheckIntervals.value.clear();
+
+      // Inicia verificação para pedidos pendentes
+      orders.value.forEach((order) => {
+        if (!order.payment_status || order.payment_status === "pending") {
+          startPaymentStatusCheck(order);
+        }
+      });
+    };
+
+    // Modifica a função loadOrders existente
     const loadOrders = async () => {
       try {
         const ordersData = await orderApi.getClientOrders(
           clientStore.currentUser.id
         );
         orders.value = ordersData;
+        console.log(orders.value);
+
+        // Inicia verificação de pagamento para todos os pedidos após carregar
+        startAllPaymentChecks();
       } catch (error) {
         console.error("Failed to load orders:", error);
         orders.value = [];
       }
     };
+
+    // Limpa os intervalos quando o componente é destruído
+    onUnmounted(() => {
+      paymentCheckIntervals.value.forEach((intervalId) =>
+        clearInterval(intervalId)
+      );
+      paymentCheckIntervals.value.clear();
+    });
     const getStatusColor = (status) => {
       const colors = {
         pending: "warning",
@@ -597,6 +832,10 @@ export default {
       getImageUrl,
       loadingFavorites,
       getStatusColor,
+      getPaymentStatusColor,
+      getPaymentStatusLabel,
+      checkPaymentStatus,
+      startPaymentStatusCheck,
     };
   },
 };

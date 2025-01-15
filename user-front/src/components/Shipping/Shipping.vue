@@ -33,7 +33,7 @@
     <template v-for="(group, storeId) in itemsByStore" :key="storeId">
       <v-card class="mb-4">
         <v-card-title class="d-flex justify-space-between align-center">
-          <span>{{ group.storeName }}</span>
+          <!-- <span>{{ group.storeName }}</span> -->
           <v-chip>{{ group.items.length }} items</v-chip>
         </v-card-title>
 

@@ -9,6 +9,7 @@ const EditItemView = () => import("../views/EditItemView.vue");
 const ItemInfoView = () => import("../views/ItemInfoView.vue");
 const AddSotreView = () => import("../views/AddStoreView.vue");
 const EditStoreView = () => import("../views/EditStoreView.vue");
+const PromoView = () => import("../views/PromoView.vue");
 
 const routes = [
   {
@@ -59,6 +60,12 @@ const routes = [
     path: "/edit-store/:storeId",
     name: "EditStoreView",
     component: EditStoreView,
+    props: true,
+  },
+  {
+    path: "/promos",
+    name: "PromoView",
+    component: PromoView,
     props: true,
   },
   // redirect to home if no route is matched

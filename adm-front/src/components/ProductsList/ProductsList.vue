@@ -16,7 +16,7 @@
             @click="addStore(userId)"
           >
             <v-icon>mdi-plus</v-icon>
-            New Sotore
+            New Store
           </v-btn>
         </template>
         <span>Add a new store</span>
@@ -126,9 +126,25 @@
                           v-if="!loadingSwitch[item.id]"
                           :model-value="item.status === 'active'"
                           @update:model-value="toggleStatus(item)"
-                          :label="item.status"
-                          color="primary"
+                          density="compact"
+                          :color="palette.lightblue[400]"
+                          :true-value="true"
+                          :false-value="false"
+                          class="status-switch"
                         >
+                          <template v-slot:label>
+                            <span
+                              :class="
+                                item.status === 'active'
+                                  ? 'text-success'
+                                  : 'text-error'
+                              "
+                            >
+                              {{
+                                item.status === "active" ? "Active" : "Inactive"
+                              }}
+                            </span>
+                          </template>
                           <v-progress-circular
                             v-if="loadingSwitch[item.id]"
                             indeterminate
@@ -330,6 +346,7 @@ export default {
       try {
         await itemsApi.updateItem(item.id, { status: newStatus });
         item.status = newStatus;
+        fetchStoresWithItems();
       } catch (error) {
         console.error("Failed to update item status:", error);
         item.status = oldStatus; // Revert on error
@@ -394,12 +411,33 @@ table {
   border-spacing: 0 10px;
 }
 
+/* Updated inactive item styling */
 tbody tr.inactive {
-  background-color: #e19999;
-  opacity: 0.6;
+  border: 2px solid #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.05);
+  transition: all 0.3s ease;
 }
+
 tbody tr.inactive:hover {
-  background-color: #d36666;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: #c82333 !important;
+}
+
+tbody tr.inactive td {
+  border-top: 2px solid #dc3545;
+  border-bottom: 2px solid #dc3545;
+}
+
+tbody tr.inactive td:first-child {
+  border-left: 2px solid #dc3545;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+tbody tr.inactive td:last-child {
+  border-right: 2px solid #dc3545;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 tbody tr:hover {
@@ -416,16 +454,41 @@ td {
   color: #666;
   border-left: 4px solid #004aad;
 }
+
 .variant-row td:last-child {
   border-right: 4px solid #004aad;
 }
+
 .v-switch {
   transform: scale(0.9);
+}
+
+.status-switch {
+  display: flex;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0;
+}
+
+:deep(.v-switch__track) {
+  opacity: 0.5;
+}
+
+:deep(.v-switch--active .v-switch__track) {
+  opacity: 1;
+}
+
+/* Enhanced switch styling for inactive state */
+:deep(.v-switch:not(.v-switch--active) .v-switch__track) {
+  color: #f00018 !important;
+  opacity: 0.7;
 }
 
 .ma-2 {
   margin: 0 4px;
 }
+
 .hover1:hover {
   color: #f5f5f5;
 }

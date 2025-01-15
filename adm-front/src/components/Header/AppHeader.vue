@@ -28,8 +28,19 @@
         v-if="isLoggedIn"
         to="/products"
         :color="palette.dodgerblue[400]"
+        class="mr-5"
       >
         Produtos
+      </v-btn>
+      <v-btn
+        prepend-icon="mdi-sale"
+        variant="outlined"
+        v-if="isLoggedIn"
+        to="/promos"
+        :color="palette.dodgerblue[400]"
+        class="mr-5"
+      >
+        Promos
       </v-btn>
     </template>
 
