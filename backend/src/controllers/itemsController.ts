@@ -46,15 +46,15 @@ export const getAllInfoItem = async (req: Request, res: Response) => {
   }
 };
 
-export const getItemPromotions = async (req: Request, res: Response) => {
-  try {
-    const { itemId } = req.params;
-    const promotions = await itemsService.getItemPromotions(itemId);
-    res.status(200).json(promotions);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};
+// export const getItemPromotions = async (req: Request, res: Response) => {
+//   try {
+//     const { itemId } = req.params;
+//     const promotions = await itemsService.getItemPromotions(itemId);
+//     res.status(200).json(promotions);
+//   } catch (error) {
+//     res.status(404).json({ message: error.message });
+//   }
+// };
 
 export const getItemReviews = async (req: Request, res: Response) => {
   try {

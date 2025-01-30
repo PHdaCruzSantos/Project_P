@@ -74,10 +74,10 @@ const getAllInfoItem = async (itemId: string) => {
     .from(variantItemTable)
     .where(eq(variantItemTable.item_id, itemId));
 
-  const discounts = await db
-    .select()
-    .from(couponsTable)
-    .where(eq(couponsTable.item_id, itemId));
+  // const discounts = await db
+  //   .select()
+  //   .from(couponsTable)
+  //   .where(eq(couponsTable.item_id, itemId));
 
   const reviews = await db
     .select()
@@ -93,21 +93,21 @@ const getAllInfoItem = async (itemId: string) => {
   return {
     item,
     stock,
-    discounts,
+    // discounts,
     reviews,
     averageRating: averageRating ? averageRating.averageRating : null,
   };
 };
 
 // Função para obter todas as promoções de um item
-const getItemPromotions = async (itemId: string) => {
-  const promotions = await db
-    .select()
-    .from(couponsTable)
-    .where(eq(couponsTable.item_id, itemId));
+// const getItemPromotions = async (itemId: string) => {
+//   const promotions = await db
+//     .select()
+//     .from(couponsTable)
+//     .where(eq(couponsTable.item_id, itemId));
 
-  return promotions;
-};
+//   return promotions;
+// };
 
 // Função para obter todas as avaliações de um item
 const getItemReviews = async (itemId: string) => {
@@ -560,7 +560,7 @@ export default {
   getItemId,
   getAllInfoItem,
   getCardItems,
-  getItemPromotions,
+  // getItemPromotions,
   getItemReviews,
   getItemAverageRating,
   getItemsByCategory,

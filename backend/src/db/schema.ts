@@ -203,20 +203,61 @@ export const salesTable = sqliteTable("sales", {
     .default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Tabela de Cupons com UUID como chave primária e referência ao UUID do item e da loja
+// Update the couponsTable definition
 export const couponsTable = sqliteTable("coupons", {
-  id: text("id").primaryKey().notNull(), // UUID para o cupom
-  code: text("code").notNull().unique(), // Código do cupom
-  name: text("name").notNull(), // Nome do cupom
-  discount_percentage: real("discount_percentage").notNull(), // Percentual de desconto
-  start_date: integer("start_date", { mode: "timestamp" }).notNull(), // Data de início do cupom
-  end_date: integer("end_date", { mode: "timestamp" }).notNull(), // Data de término do cupom
-  store_id: text("store_id") // UUID da loja
+  id: text("id").primaryKey().notNull(), // UUID for coupon
+  code: text("code").notNull().unique(), // Unique coupon code
+  name: text("name"), // Optional name for the coupon
+  discount_type: text("discount_type").notNull(), // 'percentage' or 'fixed'
+  discount_value: real("discount_value").notNull(), // Discount amount/percentage
+  start_date: integer("start_date", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`), // Start date
+  end_date: integer("end_date", { mode: "timestamp" }).notNull(), // End date (validUntil)
+  store_id: text("store_id") // Store UUID
     .notNull()
     .references(() => storesTable.id),
-  item_id: text("item_id") // UUID do item
-    .references(() => itemsTable.id),
+  status: text("status").notNull().default("active"), // active or inactive
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updated_at: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
+
+// Add new table for coupon-product relationships
+export const couponProductsTable = sqliteTable("coupon_products", {
+  id: text("id").primaryKey().notNull(),
+  coupon_id: text("coupon_id")
+    .notNull()
+    .references(() => couponsTable.id),
+  item_id: text("item_id")
+    .notNull()
+    .references(() => itemsTable.id),
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Add relations
+export const couponsRelations = relations(couponsTable, ({ many }) => ({
+  products: many(couponProductsTable),
+}));
+
+export const couponProductsRelations = relations(
+  couponProductsTable,
+  ({ one }) => ({
+    coupon: one(couponsTable, {
+      fields: [couponProductsTable.coupon_id],
+      references: [couponsTable.id],
+    }),
+    item: one(itemsTable, {
+      fields: [couponProductsTable.item_id],
+      references: [itemsTable.id],
+    }),
+  })
+);
 
 //  Tabela de Categorias com UUID como chave primária
 //  REVIEW - wathe the funcionality of the category?

@@ -94,7 +94,14 @@
 
           <!-- Improved Coupons Table -->
           <v-card-text class="pa-4">
+            <v-progress-linear
+              v-if="isLoading"
+              indeterminate
+              color="primary"
+            ></v-progress-linear>
+
             <v-table
+              v-else
               class="elevation-1 rounded"
               :hover="true"
               fixed-header
@@ -154,7 +161,7 @@
                   <td>
                     <v-chip
                       :color="
-                        coupon.discountType === 'percentage'
+                        coupon.discount_type === 'percentage'
                           ? 'success'
                           : 'info'
                       "
@@ -162,9 +169,9 @@
                       size="small"
                     >
                       {{
-                        coupon.discountType === "percentage"
-                          ? `${coupon.value}%`
-                          : `R$ ${coupon.value}`
+                        coupon.discount_type === "percentage"
+                          ? `${coupon.discount_value}%`
+                          : `R$ ${coupon.discount_value}`
                       }}
                     </v-chip>
                   </td>
@@ -172,12 +179,12 @@
                     <v-chip
                       size="small"
                       :color="
-                        new Date(coupon.validUntil) > new Date()
+                        new Date(coupon.end_date) > new Date()
                           ? 'success-lighten-1'
                           : 'error-lighten-1'
                       "
                     >
-                      {{ new Date(coupon.validUntil).toLocaleDateString() }}
+                      {{ new Date(coupon.end_date).toLocaleDateString() }}
                     </v-chip>
                   </td>
                   <td>
@@ -209,7 +216,7 @@
                   </td>
                   <td>
                     <v-switch
-                      v-model="coupon.active"
+                      v-model="coupon.status"
                       :color="palette.lightblue[400]"
                       density="compact"
                       hide-details
@@ -219,9 +226,9 @@
                     >
                       <template v-slot:label>
                         <span
-                          :class="coupon.active ? 'text-success' : 'text-error'"
+                          :class="coupon.status ? 'text-success' : 'text-error'"
                         >
-                          {{ coupon.active ? "Active" : "Inactive" }}
+                          {{ coupon.status ? "Active" : "Inactive" }}
                         </span>
                       </template>
                     </v-switch>
@@ -390,6 +397,7 @@ import { useRouter } from "vue-router";
 import palette from "../../../palette";
 import storesApi from "@/utils/api/stores";
 import itemsApi from "@/utils/api/items";
+import couponsApi from "@/utils/api/coupons";
 
 import {
   VContainer,
@@ -484,71 +492,66 @@ export default {
       storeId: null,
     });
 
-    const loadStoreProducts = async (storeId) => {
+    const fetchStoresWithCoupons = async () => {
       try {
-        const items = await itemsApi.getItemsInStore(storeId);
-        currentStoreProducts.value = items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          store_id: item.store_id,
-          price: item.price,
-        }));
+        isLoading.value = true;
+        // Get stores first
+        const resStores = await storesApi.getStores(userStore.user.user.id);
+
+        // Map stores and get their coupons
+        const fetchStoreData = async (store) => {
+          const storeItems = await itemsApi.getItemsInStore(store.id);
+
+          const storeCoupons = await couponsApi.getAllCoupons(store.id);
+          console.log(`Coupons for store ${store.id}:`, storeCoupons);
+
+          const mapProductsToCoupons = (coupon) => ({
+            ...coupon,
+            products: Array.isArray(coupon.products)
+              ? coupon.products
+                  .map((productId) =>
+                    storeItems.find((item) => item.id === productId)
+                  )
+                  .filter(Boolean)
+              : [],
+          });
+
+          return {
+            ...store,
+            items: storeItems || [],
+            coupons: Array.isArray(storeCoupons)
+              ? storeCoupons.map((response) => ({
+                  ...response.coupons,
+                }))
+              : [],
+          };
+        };
+
+        stores.value = await Promise.all((resStores || []).map(fetchStoreData));
       } catch (error) {
-        console.error("Failed to load store products:", error);
-        currentStoreProducts.value = [];
+        console.error("Error fetching stores:", error);
+      } finally {
+        isLoading.value = false;
       }
     };
 
-    const fetchStoresWithCoupons = async () => {
+    const loadStoreProducts = async (storeId) => {
       try {
-        const resStores = await storesApi.getStores(userStore.user.user.id);
-
-        // Initialize stores with their coupons and ensure products are properly loaded
-        stores.value = await Promise.all(
-          resStores.map(async (store) => {
-            const storeCouponsList = storeCoupons.value.get(store.id) || [];
-
-            // Ensure each coupon has complete product information
-            const couponsWithProducts = await Promise.all(
-              storeCouponsList.map(async (coupon) => {
-                if (coupon.products && Array.isArray(coupon.products)) {
-                  const updatedProducts = await Promise.all(
-                    coupon.products.map(async (product) => {
-                      if (typeof product === "number" || !product.name) {
-                        try {
-                          const productData = await itemsApi.getItemById(
-                            product.id || product
-                          );
-                          return {
-                            id: productData[0].id,
-                            name: productData[0].name,
-                            price: productData[0].price,
-                          };
-                        } catch (error) {
-                          console.error(
-                            `Error fetching product ${product}:`,
-                            error
-                          );
-                          return product;
-                        }
-                      }
-                      return product;
-                    })
-                  );
-                  return { ...coupon, products: updatedProducts };
-                }
-                return coupon;
-              })
-            );
-
-            return {
-              ...store,
-              coupons: couponsWithProducts,
-            };
-          })
+        isLoading.value = true;
+        const selectedStore = stores.value.find(
+          (store) => store.id === storeId
         );
+        if (selectedStore?.items) {
+          currentStoreProducts.value = selectedStore.items;
+        } else {
+          const items = await itemsApi.getItemsInStore(storeId);
+          currentStoreProducts.value = items;
+        }
       } catch (error) {
-        console.error("Error fetching stores:", error);
+        console.error("Failed to load store products:", error);
+        currentStoreProducts.value = [];
+      } finally {
+        isLoading.value = false;
       }
     };
 
@@ -565,10 +568,22 @@ export default {
       couponDialog.value = true;
     };
 
-    const editCoupon = (coupon) => {
-      editingCoupon.value = coupon;
-      couponForm.value = { ...coupon };
-      couponDialog.value = true;
+    const editCoupon = async (coupon) => {
+      try {
+        const couponDetails = await couponsApi.getCouponById(coupon.id);
+        editingCoupon.value = couponDetails;
+        couponForm.value = {
+          code: couponDetails.code,
+          discountType: couponDetails.discount_type,
+          value: couponDetails.discount_value,
+          validUntil: couponDetails.valid_until,
+          products: couponDetails.products.map((p) => p.id),
+          storeId: couponDetails.store_id,
+        };
+        couponDialog.value = true;
+      } catch (error) {
+        console.error("Error fetching coupon details:", error);
+      }
     };
 
     const getItemName = async (itemId) => {
@@ -583,60 +598,22 @@ export default {
 
     const saveCoupon = async () => {
       try {
-        // Get all selected products details
-        const selectedProducts = await Promise.all(
-          couponForm.value.products.map(async (productId) => {
-            try {
-              const product = await itemsApi.getItemById(productId);
-              return {
-                id: productId,
-                name: product[0].name,
-                price: product[0].price,
-              };
-            } catch (error) {
-              console.error(`Error fetching product ${productId}:`, error);
-              return null;
-            }
-          })
-        );
-
-        // Filter out any null products from failed fetches
-        const validProducts = selectedProducts.filter(
-          (product) => product !== null
-        );
-
-        const newCoupon = {
-          id: editingCoupon.value?.id || Date.now(),
+        const couponData = {
           code: couponForm.value.code,
-          discountType: couponForm.value.discountType,
-          value: couponForm.value.value,
-          validUntil: couponForm.value.validUntil,
-          products: validProducts,
-          storeId: couponForm.value.storeId,
-          active: true,
+          discount_type: couponForm.value.discountType,
+          discount_value: couponForm.value.value,
+          end_date: couponForm.value.validUntil,
+          products: couponForm.value.products,
+          store_id: couponForm.value.storeId,
         };
 
-        // Get existing coupons for the store or initialize new array
-        const storeCouponsList =
-          storeCoupons.value.get(couponForm.value.storeId) || [];
-
         if (editingCoupon.value) {
-          const index = storeCouponsList.findIndex(
-            (c) => c.id === editingCoupon.value.id
-          );
-          if (index !== -1) {
-            storeCouponsList[index] = newCoupon;
-          }
+          await couponsApi.updateCoupon(editingCoupon.value.id, couponData);
         } else {
-          storeCouponsList.push(newCoupon);
+          await couponsApi.createCoupon(couponForm.value.storeId, couponData);
         }
 
-        // Update store coupons
-        storeCoupons.value.set(couponForm.value.storeId, storeCouponsList);
-
-        // Fetch updated data to ensure everything is properly displayed
         await fetchStoresWithCoupons();
-
         couponDialog.value = false;
         resetCouponForm();
       } catch (error) {
@@ -656,23 +633,25 @@ export default {
       editingCoupon.value = null;
     };
 
-    const deleteCoupon = (storeId, couponId) => {
-      const storeCouponsList = storeCoupons.value.get(storeId) || [];
-      storeCoupons.value.set(
-        storeId,
-        storeCouponsList.filter((c) => c.id !== couponId)
-      );
-      fetchStoresWithCoupons();
+    const deleteCoupon = async (storeId, couponId) => {
+      try {
+        await couponsApi.deleteCoupon(couponId);
+        await fetchStoresWithCoupons();
+      } catch (error) {
+        console.error("Error deleting coupon:", error);
+      }
     };
 
-    // Modified toggleCouponStatus
-    const toggleCouponStatus = (storeId, coupon) => {
-      const storeCouponsList = storeCoupons.value.get(storeId) || [];
-      const updatedCoupons = storeCouponsList.map((c) =>
-        c.id === coupon.id ? { ...c, active: !c.active } : c
-      );
-      storeCoupons.value.set(storeId, updatedCoupons);
-      fetchStoresWithCoupons();
+    const toggleCouponStatus = async (storeId, coupon) => {
+      try {
+        await couponsApi.updateCoupon(coupon.id, {
+          ...coupon,
+          active: !coupon.active,
+        });
+        await fetchStoresWithCoupons();
+      } catch (error) {
+        console.error("Error toggling coupon status:", error);
+      }
     };
 
     onMounted(() => {
@@ -700,6 +679,7 @@ export default {
       loadStoreProducts,
       storeCoupons,
       resetCouponForm,
+      isLoading,
     };
   },
 };

@@ -5,7 +5,7 @@ import {
   getItemId,
   getAllInfoItem,
   getItemHistoricSales,
-  getItemPromotions,
+  // getItemPromotions,
   getItemReviews,
   getItemsByCategory,
   getItemAverageRating,
@@ -34,7 +34,7 @@ itemsRouter.get("/item-store/:storeId", getItemsInStore);
 itemsRouter.get("/item-search/:itemId", getItemId);
 itemsRouter.get("/item-info/:itemId", getAllInfoItem);
 itemsRouter.get("/item-sales/:itemId", getItemHistoricSales);
-itemsRouter.get("/item-promotions/:itemId", getItemPromotions);
+// itemsRouter.get("/item-promotions/:itemId", getItemPromotions);
 itemsRouter.get("/item-reviews/:itemId", getItemReviews);
 itemsRouter.get("/item-category/:category", getItemsByCategory);
 itemsRouter.get("/item-rating/:itemId", getItemAverageRating);
