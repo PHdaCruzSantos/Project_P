@@ -1,18 +1,22 @@
 <template>
+  <!-- !FIXME - Review action on card items -->
   <v-card
     :loading="loading"
-    class="item-card"
+    :class="['item-card', { 'item-unavailable': item.status !== 'active' }]"
     max-width="300"
     outlined
     rounded="lg"
     @click="showItemDetails"
     :style="cardOpacityStyle"
   >
+    <div v-if="item.status !== 'active'" class="unavailable-overlay">
+      <v-chip color="error" class="ma-2"> Indisponível </v-chip>
+    </div>
     <!-- Image Carousel -->
     <v-carousel
       v-if="!loading"
       :show-arrows="false"
-      progress="primary"
+      :progress="item.status === 'active' ? 'primary' : 'error'"
       hide-delimiters
       height="200"
       cycle
@@ -22,6 +26,7 @@
         :key="image"
         :src="getImageUrl(image)"
         @error="handleImageError"
+        :class="{ greyscale: item.status !== 'active' }"
       >
         <template v-slot:placeholder>
           <v-row class="fill-height ma-0" align="center" justify="center">
@@ -180,7 +185,6 @@ export default {
     const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
     const clientStore = useClientStore();
     const cartStore = useCartStore();
-    // const isFavorited = ref(false);
     const processedImages = computed(() => {
       if (!props.item.image_names) return [];
       return props.item.image_names.split(",").map((img) => img.trim());
@@ -273,5 +277,42 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.item-card {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.item-unavailable {
+}
+
+.unavailable-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.308);
+
+  z-index: 1;
+}
+
+.greyscale {
+  filter: grayscale(100%);
+}
+
+.price {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #666;
+}
+
+.item-unavailable .price {
+  text-decoration: line-through;
+  color: #999;
 }
 </style>

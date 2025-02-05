@@ -195,7 +195,7 @@
                       <v-chip
                         v-for="product in coupon.products"
                         :key="product.id"
-                        size="lg"
+                        size="x-small"
                         variant="outlined"
                         :color="palette.midnightblue[500]"
                         class="ma-1 px-2"
@@ -217,18 +217,23 @@
                   <td>
                     <v-switch
                       v-model="coupon.status"
-                      :color="palette.lightblue[400]"
+                      :color="switchColor(coupon.status)"
                       density="compact"
                       hide-details
                       @change="toggleCouponStatus(store.id, coupon)"
-                      :true-value="true"
-                      :false-value="false"
+                      :model-value="coupon.status === 'active'"
                     >
                       <template v-slot:label>
                         <span
-                          :class="coupon.status ? 'text-success' : 'text-error'"
+                          :class="
+                            coupon.status === 'active'
+                              ? 'text-success'
+                              : 'text-error'
+                          "
                         >
-                          {{ coupon.status ? "Active" : "Inactive" }}
+                          {{
+                            coupon.status === "active" ? "active" : "inactive"
+                          }}
                         </span>
                       </template>
                     </v-switch>
@@ -501,29 +506,40 @@ export default {
         // Map stores and get their coupons
         const fetchStoreData = async (store) => {
           const storeItems = await itemsApi.getItemsInStore(store.id);
-
           const storeCoupons = await couponsApi.getAllCoupons(store.id);
-          console.log(`Coupons for store ${store.id}:`, storeCoupons);
 
-          const mapProductsToCoupons = (coupon) => ({
-            ...coupon,
-            products: Array.isArray(coupon.products)
-              ? coupon.products
-                  .map((productId) =>
-                    storeItems.find((item) => item.id === productId)
-                  )
-                  .filter(Boolean)
-              : [],
-          });
+          const uniqueCoupons = storeCoupons.reduce((acc, response) => {
+            const coupon = response.coupons;
 
+            if (!acc[coupon.id]) {
+              acc[coupon.id] = {
+                ...coupon,
+                products: [],
+              };
+            }
+
+            if (response.coupon_products && acc[coupon.id].products) {
+              const product = storeItems.find(
+                (item) => item.id === response.coupon_products.item_id
+              );
+
+              // Check if product exists and not already in array
+              if (
+                product &&
+                !acc[coupon.id].products.find((p) => p.id === product.id)
+              ) {
+                acc[coupon.id].products.push(product);
+              }
+            }
+
+            return acc;
+          }, {});
+
+          console.log(Object.values(uniqueCoupons));
           return {
             ...store,
             items: storeItems || [],
-            coupons: Array.isArray(storeCoupons)
-              ? storeCoupons.map((response) => ({
-                  ...response.coupons,
-                }))
-              : [],
+            coupons: Object.values(uniqueCoupons),
           };
         };
 
@@ -653,6 +669,9 @@ export default {
         console.error("Error toggling coupon status:", error);
       }
     };
+    const switchColor = (status) => {
+      return status === "active" ? "success" : "primary";
+    };
 
     onMounted(() => {
       if (!userStore.isLoggedIn) {
@@ -663,6 +682,7 @@ export default {
     });
 
     return {
+      switchColor,
       stores,
       specialPromotions,
       couponDialog,
