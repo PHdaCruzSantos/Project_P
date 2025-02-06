@@ -3,6 +3,7 @@ export const usePaymentStore = defineStore("payment", {
   state: () => ({
     orderItems: [],
     shippingDetails: null,
+    stores: null,
     totals: {
       itemsTotal: 0,
       shippingTotal: 0,
@@ -16,6 +17,7 @@ export const usePaymentStore = defineStore("payment", {
     setOrderData(data) {
       this.orderItems = data.items;
       this.shippingDetails = data.shipping;
+      this.stores = data.stores;
       this.totals = data.totals;
     },
     setPixCode(code) {

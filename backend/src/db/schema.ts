@@ -39,19 +39,29 @@ export const clientsTable = sqliteTable("cliente", {
 
 // Tabela de Lojas com UUID como chave primária e referência ao UUID do usuário
 export const storesTable = sqliteTable("stores", {
-  //REVIEW - combine with usersTable?
-  id: text("id").primaryKey().notNull(), // UUID para a loja
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
-  address: text("address"),
-  email: text("contact").notNull(),
-  cnpj: text("document").notNull(),
+  email: text("email").notNull(), // Email principal da loja
+  login_email: text("login_email"), // Email para login na subconta (opcional)
+  cpf_cnpj: text("cpf_cnpj").notNull(), // CPF ou CNPJ do proprietário/empresa
+  company_type: text("company_type"), // Tipo de empresa (MEI, ME, etc) - obrigatório para PJ
+  birth_date: text("birth_date"), // Data de nascimento (obrigatório para PF)
+  phone: text("phone"), // Telefone fixo
+  mobile_phone: text("mobile_phone").notNull(), // Telefone celular (obrigatório)
+  site: text("site"), // URL do site da loja
+  address: text("address").notNull(), // Logradouro
+  address_number: text("address_number").notNull(), // Número do endereço
+  complement: text("complement"), // Complemento do endereço
+  province: text("province").notNull(), // Bairro
+  postal_code: text("postal_code").notNull(), // CEP
   logo: text("logo").notNull(), // URL do logo da loja
+  income_value: real("income_value").notNull(), // Valor de faturamento mensal
   banner: text("banner"), // URL do banner da loja
-  user_id: text("user_id") // UUID do usuário
+  user_id: text("user_id")
     .notNull()
     .references(() => usersTable.id),
-  status: text("status").notNull().default("active"), // Status da loja (active, inactive)
-  deleted_at: integer("deleted_at", { mode: "timestamp" }), // Data de exclusão lógica
+  status: text("status").notNull().default("active"),
+  deleted_at: integer("deleted_at", { mode: "timestamp" }),
   created_at: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
@@ -370,4 +380,20 @@ export const promotionItemsTable = sqliteTable("promotion_items", {
   created_at: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const storeAccountsTable = sqliteTable("store_accounts", {
+  id: text("id").primaryKey().notNull(), // UUID para o registro
+  store_id: text("store_id")
+    .notNull()
+    .references(() => storesTable.id)
+    .unique(), // Cada loja tem apenas uma subconta
+  account_id: text("account_id").notNull(), // ID da subconta no Asaas
+  wallet_id: text("wallet_id"), // ID da wallet no Asaas
+  api_key: text("api_key").notNull(), // API key da subconta
+  account_status: text("account_status").notNull(), // Status da subconta (active, inactive)
+  created_at: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updated_at: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

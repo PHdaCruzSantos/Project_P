@@ -1,135 +1,65 @@
 <template>
-  <v-container class="py-5">
-    <!-- User Information -->
-    <v-card class="elevation-3 mb-4">
-      <v-card-title class="text-h6 font-weight-bold"
-        >User Information</v-card-title
-      >
-      <v-divider></v-divider>
-      <v-card-text>
-        <v-list>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title>
-                <strong>Name:</strong>
-                <span v-if="user.name">{{ user.name }}</span>
-                <v-skeleton-loader v-else type="text"></v-skeleton-loader>
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title>
-                <strong>Email:</strong>
-                <span v-if="user.email">{{ user.email }}</span>
-                <v-skeleton-loader v-else type="text"></v-skeleton-loader>
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title>
-                <v-avatar
-                  size="50"
-                  :image="`${URL_BACKEND}/upload/images/${user.profile_image}.png`"
-                  class="rounded-circle"
-                  v-if="user.profile_image"
-                >
-                </v-avatar>
-                <v-skeleton-loader v-else type="avatar"></v-skeleton-loader>
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </v-card-text>
-    </v-card>
+  <v-container>
+    <v-row>
+      <!-- User Profile Card -->
+      <v-col cols="12" md="4">
+        <v-card class="info-card">
+          <v-card-text class="text-center">
+            <v-skeleton-loader v-if="loading" type="image" />
+            <v-avatar v-else size="120" class="mb-4">
+              <v-img
+                :src="userImageUrl"
+                :alt="userName"
+                @error="handleImageError"
+              />
+            </v-avatar>
+            <h2 class="text-h5 mb-2">{{ userName }}</h2>
+            <p class="text-subtitle-1">{{ userEmail }}</p>
+          </v-card-text>
+        </v-card>
+      </v-col>
 
-    <!-- Dashboard -->
-    <v-card class="elevation-3">
-      <v-card-title class="text-h6 font-weight-bold">Dashboard</v-card-title>
-      <v-divider></v-divider>
-      <v-card-text>
+      <!-- Stats Cards -->
+      <v-col cols="12" md="8">
         <v-row>
-          <!-- Total Stores -->
           <v-col cols="12" md="4">
-            <v-card outlined class="info-card text-center">
-              <v-card-title>
-                <v-skeleton-loader
-                  v-if="!dashboardData.totalStores"
-                  type="text"
-                ></v-skeleton-loader>
-                <template v-else>
-                  <strong>Total Stores</strong>
-                </template>
-              </v-card-title>
-              <v-card-text>
-                <v-skeleton-loader
-                  v-if="!dashboardData.totalStores"
-                  type="heading"
-                ></v-skeleton-loader>
-                <template v-else>
-                  <span class="info-value">{{
-                    dashboardData.totalStores
-                  }}</span>
-                </template>
+            <v-card class="info-card">
+              <v-card-text class="text-center">
+                <v-icon size="36" color="primary" class="mb-2">
+                  mdi-store
+                </v-icon>
+                <h3 class="text-h6">Total Stores</h3>
+                <p class="text-h4">{{ dashboardData.totalStores || 0 }}</p>
               </v-card-text>
             </v-card>
           </v-col>
 
-          <!-- Active Stores -->
           <v-col cols="12" md="4">
-            <v-card outlined class="info-card text-center">
-              <v-card-title>
-                <v-skeleton-loader
-                  v-if="!dashboardData.activeStores"
-                  type="text"
-                ></v-skeleton-loader>
-                <template v-else>
-                  <strong>Active Stores</strong>
-                </template>
-              </v-card-title>
-              <v-card-text>
-                <v-skeleton-loader
-                  v-if="!dashboardData.activeStores"
-                  type="heading"
-                ></v-skeleton-loader>
-                <template v-else>
-                  <span class="info-value">{{
-                    dashboardData.activeStores
-                  }}</span>
-                </template>
+            <v-card class="info-card">
+              <v-card-text class="text-center">
+                <v-icon size="36" color="success" class="mb-2">
+                  mdi-store-check
+                </v-icon>
+                <h3 class="text-h6">Active Stores</h3>
+                <p class="text-h4">{{ dashboardData.activeStores || 0 }}</p>
               </v-card-text>
             </v-card>
           </v-col>
 
-          <!-- Pending Approvals -->
           <v-col cols="12" md="4">
-            <v-card outlined class="info-card text-center">
-              <v-card-title>
-                <v-skeleton-loader
-                  v-if="!dashboardData.pendingApprovals"
-                  type="text"
-                ></v-skeleton-loader>
-                <template v-else>
-                  <strong>Pending Approvals</strong>
-                </template>
-              </v-card-title>
-              <v-card-text>
-                <v-skeleton-loader
-                  v-if="!dashboardData.pendingApprovals"
-                  type="heading"
-                ></v-skeleton-loader>
-                <template v-else>
-                  <span class="info-value">{{
-                    dashboardData.pendingApprovals
-                  }}</span>
-                </template>
+            <v-card class="info-card">
+              <v-card-text class="text-center">
+                <v-icon size="36" color="warning" class="mb-2">
+                  mdi-clock-outline
+                </v-icon>
+                <h3 class="text-h6">Pending Approvals</h3>
+                <p class="text-h4">{{ dashboardData.pendingApprovals || 0 }}</p>
               </v-card-text>
             </v-card>
           </v-col>
         </v-row>
-      </v-card-text>
-    </v-card>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
@@ -147,24 +77,16 @@ import {
   VSkeletonLoader,
   VRow,
   VCol,
+  VIcon,
+  VImg,
 } from "vuetify/components";
 
+import { ref, computed, onMounted } from "vue";
+import { useUserStore } from "@/stores/useStore";
+import usersApi from "@/utils/api/users";
+
 export default {
-  name: "UserDashboard",
-  components: {
-    VContainer,
-    VCard,
-    VCardTitle,
-    VCardText,
-    VDivider,
-    VList,
-    VListItem,
-    VListItemTitle,
-    VAvatar,
-    VSkeletonLoader,
-    VRow,
-    VCol,
-  },
+  name: "UserInfo",
   props: {
     user: {
       type: Object,
@@ -179,34 +101,81 @@ export default {
       }),
     },
   },
-  setup(props) {
+  components: {
+    VContainer,
+    VCard,
+    VCardTitle,
+    VCardText,
+    VDivider,
+    VList,
+    VListItem,
+    VListItemTitle,
+    VAvatar,
+    VSkeletonLoader,
+    VRow,
+    VCol,
+    VIcon,
+    VImg,
+  },
+  setup() {
     const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
-    console.log(props.user.profile_image);
+    const userStore = useUserStore();
+    const loading = ref(false);
+    const error = ref(null);
+
+    const userImageUrl = computed(() => {
+      return userStore.user?.profile_image
+        ? `${URL_BACKEND}/${userStore.user.profile_image}`
+        : `${URL_BACKEND}/default-avatar.png`;
+    });
+
+    const userName = computed(() => userStore.user?.name || "User");
+    const userEmail = computed(() => userStore.user?.email || "");
+
+    const handleImageError = (event) => {
+      event.target.src = `${URL_BACKEND}/default-avatar.png`;
+    };
+
+    const fetchUserData = async () => {
+      try {
+        loading.value = true;
+        const userData = await usersApi.getUserById(userStore.user.user.id);
+        userStore.setUser(userData);
+      } catch (err) {
+        error.value = "Failed to load user data";
+        console.error(err);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    onMounted(fetchUserData);
+
     return {
-      URL_BACKEND,
+      loading,
+      error,
+      userImageUrl,
+      userName,
+      userEmail,
+      handleImageError,
     };
   },
 };
 </script>
 
 <style scoped>
+.info-card {
+  border-radius: 12px;
+  transition: transform 0.2s;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+}
+
 .v-card {
   margin-bottom: 20px;
-  border-radius: 12px;
-}
-
-.info-card {
-  background-color: #f5f5f5;
-  padding: 16px;
-}
-
-.info-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: #1976d2;
-}
-
-.v-avatar {
-  border: 2px solid #ddd;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 }
 </style>

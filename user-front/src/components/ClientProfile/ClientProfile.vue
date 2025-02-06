@@ -1,4 +1,5 @@
 <template>
+  <!-- !FIXME - Review the format price function -->
   <v-container>
     <v-row>
       <!-- Profile Header -->

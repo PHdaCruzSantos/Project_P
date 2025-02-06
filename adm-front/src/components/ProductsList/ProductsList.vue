@@ -1,6 +1,24 @@
 <template>
   <v-container>
+    <div v-if="isLoading" class="d-flex justify-center align-center pa-4">
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+    </div>
+
+    <div v-else-if="!stores.length" class="empty-state pa-8">
+      <v-card class="text-center pa-6">
+        <v-icon size="64" color="grey">mdi-store-off</v-icon>
+        <h2 class="text-h5 mt-4 mb-2">No Stores Found</h2>
+        <p class="text-body-1 mb-4 text-grey">
+          You haven't created any stores yet. Start by creating your first
+          store!
+        </p>
+        <v-btn color="primary" @click="addStore" prepend-icon="mdi-plus">
+          Create Store
+        </v-btn>
+      </v-card>
+    </div>
     <v-toolbar
+      v-else
       :color="palette.slategray[700]"
       flat
       class="d-flex justify-around align-center mb-4 border-radius rounded px-2 elevation-3"
@@ -230,7 +248,7 @@
 <script>
 import { ref, onMounted, computed } from "vue";
 import { useStoresStore } from "../../stores/storesStore";
-import { useUserStore } from "../../stores/useStore";
+import { useUserStore } from "@/stores/useStore";
 import { useRouter } from "vue-router";
 import itemsApi from "../../utils/api/items";
 import {
@@ -284,7 +302,7 @@ export default {
     const storesStore = useStoresStore();
     const userStore = useUserStore();
     const router = useRouter();
-    const userId = userStore.user.user.id;
+    const userId = userStore.user.id;
     const stores = ref([]);
     const expandedItems = ref([]);
     const isLoading = ref(true);
@@ -300,15 +318,27 @@ export default {
     ];
 
     const fatchSotres = async () => {
-      const resStore = await storesApi.getStores(userStore.user.user.id);
-      storesStore.setStores(resStore);
+      try {
+        const resStore = await storesApi.getStores(userId);
+        if (resStore) {
+          storesStore.setStores(resStore);
+        } else {
+          storesStore.setStores([]); // Set empty array if no stores
+        }
+      } catch (error) {
+        console.error("Failed to fetch stores:", error);
+        storesStore.setStores([]);
+      }
     };
 
     const fetchStoresWithItems = async () => {
       try {
         await fatchSotres();
+      } catch (error) {
+        console.log("sem lojas");
+      }
+      try {
         const storesData = storesStore.stores;
-        console.log(storesData);
         for (const store of storesData) {
           const itemsResponse = await itemsApi.getItemsInStore(store.id);
           console.log(store.logo);
@@ -371,7 +401,8 @@ export default {
 
     onMounted(() => {
       if (!isLoggedIn.value) {
-        router.push("/login");
+        router.push("/");
+        alert("oiii");
       } else {
         fetchStoresWithItems();
       }

@@ -5,7 +5,6 @@ export const getStores = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
     const stores = await storesServices.getStores(userId);
-    console.log(stores);
 
     res.status(200).json(stores);
   } catch (error) {
@@ -13,10 +12,10 @@ export const getStores = async (req: Request, res: Response) => {
   }
 };
 
-export const getStore = async (req: Request, res: Response) => {
+export const getStoreById = async (req: Request, res: Response) => {
   try {
     const storeId = req.params.storeId;
-    const store = await storesServices.getStore(storeId);
+    const store = await storesServices.getStoreById(storeId);
 
     if (!store) {
       throw new Error("Store not found");
@@ -28,11 +27,11 @@ export const getStore = async (req: Request, res: Response) => {
   }
 };
 
-export const addStore = async (req: Request, res: Response) => {
+export const createStore = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
-    const store = req.body;
-    const newStore = await storesServices.addStore(userId, store);
+    const store = { ...req.body, user_id: req.params.userId };
+    console.log(store);
+    const newStore = await storesServices.createStore(store);
 
     if (!newStore) {
       throw new Error("Store not created");
@@ -40,7 +39,7 @@ export const addStore = async (req: Request, res: Response) => {
 
     res.status(201).json({ mensagem: "Store created successfully" });
   } catch (error) {
-    res.status(404).json({ message: error });
+    res.status(404).json({ message: "Flha ao criar loja", error });
   }
 };
 

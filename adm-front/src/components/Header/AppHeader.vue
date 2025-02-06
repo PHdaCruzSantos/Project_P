@@ -200,17 +200,6 @@ export default {
       }
     };
 
-    // const checkAuth = async () => {
-    //   try {
-    //     const response = await auth.checkAuth();
-    //     userStore.setUser(response.user);
-    //   } catch (error) {
-    //     console.error("Failed to check auth:", error);
-    //   }
-    // };
-
-    // onMounted(checkAuth);
-
     const cartItemCount = computed(() => cartStore.state.contCartITems);
     const isLoggedIn = computed(() => userStore.isLoggedIn);
 

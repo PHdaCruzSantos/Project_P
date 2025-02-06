@@ -218,7 +218,8 @@ export default {
     const loadStoreInfo = async (storeId) => {
       try {
         const store = await storeApi.getStore(storeId);
-        storeInfos.value.set(storeId, store);
+        storeInfos.value.set(storeId, store.store); // use sotre.wallet para pegar o wallet id
+        console.log(store.store);
       } catch (error) {
         console.error("Failed to load store info", error);
       }
@@ -277,8 +278,6 @@ export default {
         const cartData = await clientsApi.getCartByClientId(
           clientStore.currentUser.id
         );
-        console.log(cartData);
-
         // Fetch full item details for each cart item
         const itemsWithDetails = await Promise.all(
           cartData.map(async (cartItem) => {

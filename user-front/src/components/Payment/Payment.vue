@@ -164,16 +164,43 @@ export default {
     const orderTotal = computed(() => paymentStore.totals.itemsTotal);
     const shippingTotal = computed(() => paymentStore.totals.shippingTotal);
     const grandTotal = computed(() => paymentStore.totals.grandTotal);
-    console.log(paymentStore);
+
     const formatPaymentData = () => {
+      console.log(paymentStore.stores);
+      if (!Array.isArray(paymentStore.stores)) {
+        throw new Error("Stores data is not in the expected format");
+      }
+
+      const split = paymentStore.stores.map((store, i) => {
+        if (!store[i].wallet_id) {
+          throw new Error(`Wallet ID not found for store ${store.store_id}`);
+        }
+        const storeTotal = store.items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        const items = store.items.map((item) => {
+          return {
+            storeId: item.store_id,
+            productId: item.id,
+            quantity: item.quantity,
+            price: item.price,
+          };
+        });
+        console.log(items);
+
+        return {
+          items: items,
+          walletId: store[i].wallet_id,
+          fixedValue: storeTotal,
+        };
+      });
+
       return {
         clientId: clientsStore.currentUser.id,
-        value: paymentStore.totals.grandTotal,
-        items: paymentStore.orderItems.map((item) => ({
-          name: item.name,
-          value: item.price,
-          quantity: item.quantity,
-        })),
+        value: grandTotal.value,
+        split: split,
+        items: split.reduce((items, store) => items.concat(store.items), []),
       };
     };
 
@@ -181,7 +208,6 @@ export default {
       try {
         const paymentData = formatPaymentData();
         const response = await paymentApi.createPayment(paymentData);
-        console.log(response);
 
         pixCode.value = {
           qrCodeImage: response.pix.encodedImage,
@@ -222,7 +248,7 @@ export default {
           console.error("Payment status check failed:", err);
           error.value = "Failed to check payment status";
         }
-      }, 5000); // Check every 5 seconds
+      }, 5000);
     };
 
     const formatPrice = (value) => {
@@ -247,6 +273,12 @@ export default {
         router.push("/cart");
         return;
       }
+
+      if (!paymentStore.stores || !Array.isArray(paymentStore.stores)) {
+        console.error("Stores data is not in the expected format");
+        return;
+      }
+
       initializePayment();
     });
 

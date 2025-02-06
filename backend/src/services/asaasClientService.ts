@@ -15,7 +15,7 @@ interface CustomerRequest {
   email: string;
   cpfCnpj: string;
   phone?: string;
-  externalReference?: string; // Add reference to our system's user ID
+  externalReference?: string;
 }
 
 interface CustomerResponse {
@@ -25,6 +25,112 @@ interface CustomerResponse {
   cpfCnpj: string;
   externalReference?: string;
 }
+
+interface AccountRequest {
+  store_id: string;
+  name: string;
+  email: string;
+  login_email?: string;
+  cpf_cnpj: string;
+  company_type?: string;
+  birth_date?: string;
+  phone?: string;
+  mobile_phone: string;
+  site?: string;
+  address: string;
+  address_number: string;
+  complement?: string;
+  province: string;
+  postal_code: string;
+  logo: string;
+  banner?: string;
+  user_id: string;
+  income_value: number;
+}
+
+interface AccountResponse {
+  id: string;
+  name: string;
+  email: string;
+  cpfCnpj: string;
+  apiKey: string;
+  status: string;
+}
+
+interface WalletInfo {
+  id: string;
+}
+
+const createAccount = async (
+  data: AccountRequest
+): Promise<AccountResponse> => {
+  try {
+    const response = await asaasClientService.post("/accounts", {
+      name: data.name,
+      email: data.email,
+      cpfCnpj: data.cpf_cnpj,
+      companyType: data.company_type || "MEI",
+      phone: data.phone,
+      mobilePhone: data.mobile_phone,
+      address: data.address,
+      addressNumber: data.address_number,
+      complement: data.complement,
+      province: data.province,
+      postalCode: data.postal_code,
+      logo: data.logo,
+      banner: data.banner,
+      user_id: data.user_id,
+      incomeValue: data.income_value,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating account:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to create account");
+  }
+};
+
+const getAccountWallet = async (accountApiKey: string): Promise<string> => {
+  try {
+    if (!accountApiKey) {
+      throw new Error("Account API key is required");
+    }
+    const response = await axios.get(
+      "https://api-sandbox.asaas.com/v3/wallets/",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          access_token: accountApiKey,
+        },
+      }
+    );
+    if (!response?.data?.data?.[0]?.id) {
+      throw new Error("No wallet ID found in response");
+    }
+    return response.data.data[0].id;
+  } catch (error) {
+    console.error(
+      "Error getting account wallet:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to get account wallet");
+  }
+};
+
+const getAccount = async (accountId: string): Promise<AccountResponse> => {
+  try {
+    const response = await asaasClientService.get(`/accounts/${accountId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error getting account:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to get account");
+  }
+};
 
 const findCustomerByCpfCnpj = async (
   cpfCnpj: string
@@ -58,4 +164,11 @@ const createCustomer = async (
   }
 };
 
-export default { asaasClientService, findCustomerByCpfCnpj, createCustomer };
+export default {
+  asaasClientService,
+  findCustomerByCpfCnpj,
+  createCustomer,
+  createAccount,
+  getAccount,
+  getAccountWallet,
+};

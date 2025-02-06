@@ -8,13 +8,15 @@ const createPayment = async (paymentData) => {
     },
     body: JSON.stringify({
       clientId: paymentData.clientId,
-      value: paymentData.value,
-      items: paymentData.items,
+      totalValue: paymentData.value, // Valor total do pedido
+      items: paymentData.items, // Itens do pedido
       description: `Order from client ${paymentData.clientId}`,
-      externalReference: `order_${Date.now()}`,
+      externalReference: `order_${Date.now()}`, // Referência externa
+      split: paymentData.split, // Adiciona o split de pagamento
     }),
     credentials: "include",
   });
+  console.log("paymentdata", paymentData);
 
   if (!response.ok) {
     const error = await response.json();

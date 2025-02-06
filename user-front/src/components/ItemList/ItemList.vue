@@ -100,8 +100,8 @@ export default {
     const itemsPerPage = ref(12);
     const selectedCategory = ref(null);
     const categories = ref(["All", "Electronics", "Clothing", "Books"]);
-    const sortBy = ref("name");
-    const sortOptions = ["name", "price-low", "price-high", "rating"];
+    const sortBy = ref("active");
+    const sortOptions = ["All", "price-low", "price-high", "rating", "active"];
 
     // Fetch items
     const fetchItems = async () => {
@@ -116,11 +116,9 @@ export default {
       }
     };
 
-    // Filter and sort items
     const filteredItems = computed(() => {
       let result = [...items.value];
 
-      // Apply category filter
       if (selectedCategory.value && selectedCategory.value !== "All") {
         result = result.filter(
           (item) => item.category === selectedCategory.value
@@ -137,6 +135,10 @@ export default {
           break;
         case "rating":
           result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          break;
+        case "active":
+          result = result.filter((item) => item.status === "active");
+          result.sort((a, b) => a.name.localeCompare(b.name));
           break;
         default:
           result.sort((a, b) => a.name.localeCompare(b.name));

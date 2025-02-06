@@ -335,7 +335,7 @@ export default {
           // Then create item
           await itemsApi.addItem(props.storeId, item);
           clearForm();
-          router.push({ path: `/store/${props.storeId}` });
+          router.back();
         } catch (error) {
           console.error("Failed to add item:", error);
         }

@@ -140,6 +140,7 @@ import { useShippingStore } from "@/stores/shippingStore";
 import { usePaymentStore } from "@/stores/paymentStore";
 import orderApi from "@/utils/api/orderApi";
 import clientsApi from "@/utils/api/clientsApi";
+import storeApi from "@/utils/api/storeApi";
 import shippingApi from "@/utils/api/shippingApi";
 import { useRouter } from "vue-router";
 import {
@@ -197,6 +198,7 @@ export default {
     const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
 
     const selectedItems = computed(() => shippingStore.selectedProducts);
+    console.log(selectedItems);
     // Group items by store
     const itemsByStore = computed(() => {
       const groups = {};
@@ -336,44 +338,21 @@ export default {
       }`;
     };
 
-    const saveOrder = async () => {
-      try {
-        // Format items as required by API
-        const formattedItems = shippingStore.selectedProducts.map((item) => ({
-          item_id: item.id,
-          quantity: item.quantity,
-          price: item.price,
-          item_name: item.name,
-        }));
-
-        // Calculate total amount in cents
-        const totalInCents = Math.round(calculateGrandTotal() * 100);
-
-        const orderData = {
-          clients_id: clientStore.currentUser.id,
-          payment_id: null, // Will be set after payment processing
-          status: "pending",
-          total_amount: totalInCents,
-          payment_method: null, // Will be set in payment step
-          shipping_address: formatShippingAddress(selectedAddress.value),
-          shipping_price: calculateShippingTotal(),
-          items: formattedItems,
-        };
-
-        // Create order in backend
-
-        console.log("order", orderData);
-        const order = await orderApi.createOrder(orderData);
-      } catch (error) {
-        console.error("Failed to create order:", error);
-      }
-    };
-
     const proceedToPayment = async () => {
       const paymentStore = usePaymentStore();
 
       try {
-        // Prepare order data
+        const storesData = await Promise.all(
+          Object.keys(itemsByStore.value).map(async (storeId) => {
+            const storeData = await storeApi.getStore(storeId);
+            return {
+              store_id: storeId,
+              wallet_id: storeData.wallet?.wallet_id,
+              shipping_rate: selectedShipping.value[storeId],
+              items: itemsByStore.value[storeId].items,
+            };
+          })
+        );
         const orderData = {
           items: shippingStore.selectedProducts,
           shipping: {
@@ -388,12 +367,11 @@ export default {
           status: "pending",
           client_id: clientStore.currentUser.id,
           stores: Object.keys(itemsByStore.value).map((storeId) => ({
-            store_id: storeId,
-            shipping_rate: selectedShipping.value[storeId],
+            ...storesData,
             items: itemsByStore.value[storeId].items,
           })),
         };
-        saveOrder();
+        console.log("oderdata", orderData);
         paymentStore.setOrderData({
           ...orderData,
         });

@@ -1,7 +1,7 @@
 <template>
   <VMain>
     <!-- Informações do Usuário e Lista de Itens -->
-    <UserInfo v-if="userStore.isLoggedIn" :user="userStore.user.user" />
+    <UserInfo v-if="userStore.isLoggedIn" />
     <div v-else class="guest-view">
       <!-- Banner Principal -->
       <v-container class="welcome-banner">
