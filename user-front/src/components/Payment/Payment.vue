@@ -111,6 +111,7 @@ import { useShippingStore } from "@/stores/shippingStore";
 import { usePaymentStore } from "@/stores/paymentStore";
 import { useClientStore } from "@/stores/clientsStore";
 import paymentApi from "@/utils/api/paymentApi";
+import orderApi from "@/utils/api/orderApi";
 
 import {
   VContainer,
@@ -165,6 +166,50 @@ export default {
     const shippingTotal = computed(() => paymentStore.totals.shippingTotal);
     const grandTotal = computed(() => paymentStore.totals.grandTotal);
 
+    const formatOrderData = (
+      paymentStore,
+      clientsStore,
+      pixPaymentId = null
+    ) => {
+      // Calculate totals per store
+      const storeOrders = paymentStore.stores.map((store) => {
+        const storeTotal = store.items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        const shippingCost = store.shipping_rate?.price || 0;
+
+        return {
+          store_id: store.store_id,
+          items: store.items.map((item) => ({
+            item_id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            item_name: item.name,
+          })),
+          subtotal: storeTotal,
+          shipping_price: shippingCost,
+          total: storeTotal + shippingCost,
+        };
+      });
+      console.log(paymentStore.shippingDetails);
+      // Create order data structure
+      return {
+        clients_id: clientsStore.currentUser.id,
+        payment_id: pixPaymentId,
+        status: "pending",
+        total_amount: paymentStore.totals.grandTotal,
+        payment_method: "pix",
+        shipping_address: paymentStore.shippingDetails.address.address,
+        shipping_price: paymentStore.totals.shippingTotal,
+        items: storeOrders.reduce(
+          (allItems, store) => [...allItems, ...store.items],
+          []
+        ),
+        store_orders: storeOrders,
+      };
+    };
+
     const formatPaymentData = () => {
       console.log(paymentStore.stores);
       if (!Array.isArray(paymentStore.stores)) {
@@ -207,15 +252,23 @@ export default {
     const initializePayment = async () => {
       try {
         const paymentData = formatPaymentData();
-        const response = await paymentApi.createPayment(paymentData);
+        const paymentResponse = await paymentApi.createPayment(paymentData);
+
+        const orderData = formatOrderData(
+          paymentStore,
+          clientsStore,
+          paymentResponse.id
+        );
+        const orderResponse = await orderApi.createOrder(orderData);
+        console.log(orderResponse);
 
         pixCode.value = {
-          qrCodeImage: response.pix.encodedImage,
-          code: response.pix.code,
-          expirationDate: response.pix.expirationDate,
+          qrCodeImage: paymentResponse.pix.encodedImage,
+          code: paymentResponse.pix.code,
+          expirationDate: paymentResponse.pix.expirationDate,
         };
 
-        startPaymentCheck(response.id);
+        startPaymentCheck(paymentResponse.id, orderResponse.id);
       } catch (error) {
         console.error("Payment initialization failed:", error);
       }
@@ -231,16 +284,20 @@ export default {
       }
     };
 
-    const startPaymentCheck = async (paymentId) => {
+    const startPaymentCheck = async (paymentId, orderId) => {
       const checkInterval = setInterval(async () => {
         try {
           const status = await paymentApi.getPaymentStatus(paymentId);
           paymentStatus.value = status;
 
           if (status === "RECEIVED" || status === "CONFIRMED") {
+            // Update order status when payment is confirmed
+            await orderApi.updateOrderStatus(orderId, status);
             clearInterval(checkInterval);
             await router.push("/order-confirmation");
           } else if (status === "FAILED" || status === "CANCELLED") {
+            // Update order status when payment fails
+            await orderApi.updateOrderStatus(orderId, status);
             clearInterval(checkInterval);
             error.value = "Payment failed or cancelled";
           }

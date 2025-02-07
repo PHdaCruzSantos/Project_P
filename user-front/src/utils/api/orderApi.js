@@ -36,6 +36,7 @@ const getOrderById = async (orderId) => {
 };
 
 const getClientOrders = async (clientId) => {
+  console.log("orderId", clientId);
   const response = await fetch(`${apiUrl}/api/order/${clientId}`, {
     method: "GET",
     headers: {

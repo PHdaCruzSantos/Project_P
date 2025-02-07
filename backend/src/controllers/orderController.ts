@@ -13,7 +13,8 @@ export const createOrder = async (req: Request, res: Response) => {
 
 export const getOrderById = async (req: Request, res: Response) => {
   try {
-    const order = await orderService.getOrderById(req.params.orderId);
+    const orderId = req.params.orderId;
+    const order = await orderService.getOrderById(orderId);
     res.json(order);
   } catch (error) {
     res.status(404).json({ error: "Order not found" });
@@ -22,7 +23,8 @@ export const getOrderById = async (req: Request, res: Response) => {
 
 export const getClientOrders = async (req: Request, res: Response) => {
   try {
-    const orders = await orderService.getClientOrders(req.params.clientId);
+    const clientId = req.params.clientId;
+    const orders = await orderService.getClientOrders(clientId);
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch orders" });

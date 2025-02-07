@@ -121,7 +121,7 @@
                   >
                     <v-card>
                       <v-card-title
-                        class="d-flex align-center justify-space-between pa-4"
+                        class="d-flex align-center justify-space-between pa-4 mx-4"
                       >
                         <span class="text-h6">
                           Order #{{ order.id.slice(0, 8) }}
@@ -130,7 +130,7 @@
                           <v-chip
                             :color="getStatusColor(order.status)"
                             size="small"
-                            class="text-uppercase"
+                            class="text-uppercase px-2 mx-2"
                             label
                           >
                             {{ order.status }}
@@ -551,7 +551,7 @@ export default {
 
     const getPaymentStatusColor = (status) => {
       const colors = {
-        paid: "success",
+        RECEIVED: "success",
         pending: "warning",
         failed: "error",
         null: "grey",
@@ -562,11 +562,20 @@ export default {
     const getPaymentStatusLabel = (status) => {
       if (!status) return "Payment Pending";
       const labels = {
-        paid: "Payment Confirmed",
+        RECEIVED: "Payment Confirmed",
         pending: "Payment Pending",
         failed: "Payment Failed",
       };
       return labels[status] || status;
+    };
+    const getStatusColor = (status) => {
+      const colors = {
+        pending: "warning",
+        CONFIRMED: "success",
+        cancelled: "error",
+        delivered: "info",
+      };
+      return colors[status] || "grey";
     };
 
     const showAddAddressDialog = () => {
@@ -717,7 +726,7 @@ export default {
             ];
 
             // Se o pagamento foi confirmado ou falhou, para a verificação
-            if (status === "paid" || status === "failed") {
+            if (status === "RECEIVED" || status === "FAILED") {
               clearInterval(paymentCheckIntervals.value.get(order.id));
               paymentCheckIntervals.value.delete(order.id);
             }
@@ -766,6 +775,7 @@ export default {
     // Modifica a função loadOrders existente
     const loadOrders = async () => {
       try {
+        console.log("Loading orders...", clientStore.currentUser.id);
         const ordersData = await orderApi.getClientOrders(
           clientStore.currentUser.id
         );
@@ -787,15 +797,6 @@ export default {
       );
       paymentCheckIntervals.value.clear();
     });
-    const getStatusColor = (status) => {
-      const colors = {
-        pending: "warning",
-        paid: "success",
-        cancelled: "error",
-        delivered: "info",
-      };
-      return colors[status] || "grey";
-    };
 
     watch(
       () => props.tab,
