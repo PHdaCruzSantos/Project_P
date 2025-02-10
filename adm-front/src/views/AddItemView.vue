@@ -4,7 +4,7 @@
       <v-container>
         <v-card>
           <v-card-title>
-            <span class="title">Add Item</span>
+            <span class="title">Adicionar Novo Item!</span>
           </v-card-title>
           <AddItem :storeId="storeId" />
         </v-card>

@@ -6,7 +6,7 @@
         <v-icon @click="goBack" :style="{ color: palette.lightblue[300] }">
           mdi-arrow-left
         </v-icon>
-        Edit Store
+        Edição de Loja
       </v-card-title>
 
       <v-divider></v-divider>
@@ -15,7 +15,7 @@
         <!-- Store Images Preview -->
         <v-row>
           <v-col cols="12" md="6" class="text-center">
-            <p class="text-subtitle-1">Store Logo</p>
+            <p class="text-subtitle-1">Logomarca da Loja</p>
             <v-img
               :src="logoPreview || `${URL_BACKEND}/upload/images/${store.logo}`"
               alt="Store Logo"
@@ -39,12 +39,12 @@
               @click="updateLogo"
               :loading="uploading.logo"
             >
-              Update Logo
+              Atualizar Logomarca
             </v-btn>
           </v-col>
 
           <v-col cols="12" md="6" class="text-center">
-            <p class="text-subtitle-1">Store Banner</p>
+            <p class="text-subtitle-1">Banner da Loja</p>
             <v-img
               :src="
                 bannerPreview || `${URL_BACKEND}/upload/images/${store.banner}`
@@ -56,7 +56,7 @@
             ></v-img>
             <v-file-input
               v-model="newBanner"
-              label="Update Banner"
+              label="Banner da Loja"
               accept="image/*"
               @change="handleBannerChange"
               prepend-icon="mdi-image"
@@ -81,7 +81,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="store.name"
-                label="Store Name*"
+                label="Nome da Loja*"
                 :rules="[rules.required]"
                 outlined
                 dense
@@ -91,7 +91,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="store.cnpj"
-                label="CNPJ*"
+                label="CNPJ/CPF*"
                 :rules="[rules.required]"
                 outlined
                 dense
@@ -101,7 +101,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="store.email"
-                label="Contact Email*"
+                label="Email de Contato*"
                 :rules="[rules.required, rules.email]"
                 outlined
                 dense
@@ -111,7 +111,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="store.address"
-                label="Address"
+                label="Endereço"
                 outlined
                 dense
               ></v-text-field>
@@ -121,14 +121,14 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn color="error" text @click="clearForm">Clear</v-btn>
+        <v-btn color="error" text @click="clearForm">Limpar</v-btn>
         <v-spacer></v-spacer>
         <v-btn
           color="primary"
           @click="updateStoreInfo"
           :disabled="!isFormValid"
         >
-          Update Store Info
+          Atualizar Informações da Loja
         </v-btn>
       </v-card-actions>
     </v-card>

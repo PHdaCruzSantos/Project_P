@@ -42,3 +42,39 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to update order status" });
   }
 };
+
+export const getStoreOrders = async (req: Request, res: Response) => {
+  try {
+    const storeId = req.params.storeId;
+    const filters: OrderFilters = {
+      startDate: req.query.startDate as string,
+      endDate: req.query.endDate as string,
+      status: req.query.status as string,
+      page: parseInt(req.query.page as string) || 1,
+      limit: parseInt(req.query.limit as string) || 10,
+    };
+
+    const orders = await orderService.getStoreOrders(storeId, filters);
+    res.json(orders);
+  } catch (error) {
+    console.error("Failed to fetch store orders:", error);
+    res.status(500).json({ error: "Failed to fetch store orders" });
+  }
+};
+
+export const getStoreMetrics = async (req: Request, res: Response) => {
+  try {
+    const storeId = req.params.storeId;
+    const startDate = req.query.startDate as string;
+    const endDate = req.query.endDate as string;
+
+    const metrics = await orderService.getStoreMetrics(storeId, {
+      startDate,
+      endDate,
+    });
+    res.json(metrics);
+  } catch (error) {
+    console.error("Failed to fetch store metrics:", error);
+    res.status(500).json({ error: "Failed to fetch store metrics" });
+  }
+};

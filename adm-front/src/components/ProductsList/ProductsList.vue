@@ -9,11 +9,10 @@
         <v-icon size="64" color="grey">mdi-store-off</v-icon>
         <h2 class="text-h5 mt-4 mb-2">No Stores Found</h2>
         <p class="text-body-1 mb-4 text-grey">
-          You haven't created any stores yet. Start by creating your first
-          store!
+          Você ainda não criou nenhuma loja. Comece criando sua primeira loja!
         </p>
         <v-btn color="primary" @click="addStore" prepend-icon="mdi-plus">
-          Create Store
+          Criar Loja
         </v-btn>
       </v-card>
     </div>
@@ -23,21 +22,16 @@
       flat
       class="d-flex justify-around align-center mb-4 border-radius rounded px-2 elevation-3"
     >
-      <v-toolbar-title>Stores</v-toolbar-title>
+      <v-toolbar-title>Lojas</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-tooltip start>
         <template v-slot:activator>
-          <v-btn
-            variant="outlined"
-            class="hover1"
-            :color="palette.lightblue[300]"
-            @click="addStore(userId)"
-          >
+          <v-btn variant="outlined" class="hover1" @click="addStore(userId)">
             <v-icon>mdi-plus</v-icon>
-            New Store
+            Nova Loja
           </v-btn>
         </template>
-        <span>Add a new store</span>
+        <span>Adicionar nova loja</span>
       </v-tooltip>
     </v-toolbar>
     <v-row v-for="store in stores" :key="store.id" class="mb-4">
@@ -76,7 +70,7 @@
                     @click="editStore(store.id)"
                   >
                     <v-icon class="pr-2"> mdi-store-edit </v-icon>
-                    Edit Store
+                    Editar Loja
                   </v-btn>
                 </v-col>
               </v-row>
@@ -90,7 +84,7 @@
                   @click="addItem(store.id)"
                 >
                   <v-icon class="pr-2">mdi-plus</v-icon>
-                  New Item
+                  Adicionar Novo Item
                 </v-btn>
               </div>
             </v-toolbar>
@@ -101,7 +95,11 @@
               <table class="table table-hover">
                 <thead>
                   <tr>
-                    <th v-for="header in headers" :key="header.text">
+                    <th
+                      v-for="header in headers"
+                      :key="header.text"
+                      class="text-center"
+                    >
                       {{ header.text }}
                     </th>
                   </tr>
@@ -221,7 +219,7 @@
                   <tr v-if="store.items.length === 0">
                     <td colspan="5" class="text-center">
                       <v-alert type="info" elevation="1" icon="mdi-alert">
-                        No items found in this store.
+                        Esta loja ainda não possui itens cadastrados.
                       </v-alert>
                     </td>
                   </tr>
@@ -310,11 +308,11 @@ export default {
     const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
 
     const headers = [
-      { text: "Name", value: "name" },
-      { text: "Description", value: "description" },
-      { text: "Price", value: "price" },
+      { text: "Nome", value: "name" },
+      { text: "Descrição", value: "description" },
+      { text: "Preço (R$)", value: "price" },
       { text: "Status", value: "status" },
-      { text: "Actions", value: "actions" },
+      { text: "Ações", value: "actions" },
     ];
 
     const fatchSotres = async () => {

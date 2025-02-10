@@ -1,12 +1,14 @@
 const apiUrl = import.meta.env.VITE_API_URL_BACKEND;
 
-const uploadFiles = async (files) => {
+const uploadFiles = async (file) => {
   const formData = new FormData();
 
-  // Add each file to formData
-  files.forEach((file) => {
-    formData.append("files", file);
-  });
+  // Handle single file upload
+  if (file && file.length > 0) {
+    formData.append("files", file[0]); // Get first file from FileList
+  } else {
+    throw new Error("No file provided");
+  }
 
   const response = await fetch(`${apiUrl}/upload/add-image`, {
     method: "POST",

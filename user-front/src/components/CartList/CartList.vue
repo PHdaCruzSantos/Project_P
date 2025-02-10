@@ -4,9 +4,9 @@
       <VCol cols="12">
         <VCard :loading="loading">
           <VCardTitle class="d-flex justify-space-between align-center">
-            <span>Shopping Cart</span>
+            <span>Carrinho de compras</span>
             <div class="text-subtitle-1">
-              Selected Total: R$ {{ selectedTotal }}
+              Total Selecionado: R$ {{ selectedTotal }}
             </div>
           </VCardTitle>
 
@@ -47,13 +47,13 @@
                     <VTable fixed-header>
                       <thead>
                         <tr>
-                          <th scope="col">Select</th>
-                          <th scope="col">Image</th>
-                          <th scope="col">Product</th>
-                          <th scope="col">Price</th>
-                          <th scope="col">Quantity</th>
+                          <th scope="col">Selecionar</th>
+                          <th scope="col">Imagem</th>
+                          <th scope="col">Produto</th>
+                          <th scope="col">Preço (R$)</th>
+                          <th scope="col">Quantidade</th>
                           <th scope="col">Total</th>
-                          <th scope="col">Actions</th>
+                          <th scope="col">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -118,7 +118,7 @@
               </template>
 
               <VAlert v-else type="info" class="mt-4">
-                Your cart is empty
+                Seu carrinho está vazio.
               </VAlert>
             </div>
           </VCardText>
@@ -127,7 +127,7 @@
 
           <VCardActions class="justify-space-between">
             <VBtn to="/" variant="text" prepend-icon="mdi-arrow-left">
-              Continue Shopping
+              Continuar Comprando
             </VBtn>
             <VBtn
               color="primary"
@@ -135,7 +135,7 @@
               @click="checkout"
               append-icon="mdi-cart-checkout"
             >
-              Checkout Selected ({{ selectedItems.size }})
+              Comprar Items Selecionados ({{ selectedItems.size }})
             </VBtn>
           </VCardActions>
         </VCard>

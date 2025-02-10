@@ -14,7 +14,7 @@
                 </v-icon>
               </v-col>
               <v-col cols="4">
-                <div class="text-h6">Add Store</div>
+                <div class="text-h6">Criar nova Loja!</div>
               </v-col>
             </v-row>
           </v-card-title>
@@ -31,7 +31,7 @@
                   <v-text-field
                     variant="outlined"
                     v-model="store.name"
-                    label="Store Name"
+                    label="Nome da Loja:"
                     :rules="[rules.required]"
                   ></v-text-field>
                 </v-col>
@@ -51,7 +51,7 @@
                   <v-text-field
                     v-model="store.address"
                     variant="outlined"
-                    label="Address"
+                    label="Rua:"
                     :rules="[rules.required]"
                   ></v-text-field>
                 </v-col>
@@ -59,7 +59,7 @@
                   <v-text-field
                     v-model="store.address_number"
                     variant="outlined"
-                    label="Address Number"
+                    label="Número:"
                     :rules="[rules.required]"
                   ></v-text-field>
                 </v-col>
@@ -70,7 +70,7 @@
                   <v-text-field
                     v-model="store.province"
                     variant="outlined"
-                    label="Province"
+                    label="Estado"
                     :rules="[rules.required]"
                   ></v-text-field>
                 </v-col>
@@ -78,7 +78,7 @@
                   <v-text-field
                     v-model="store.postal_code"
                     variant="outlined"
-                    label="Postal Code"
+                    label="CEP"
                     :rules="[rules.required]"
                   ></v-text-field>
                 </v-col>
@@ -86,7 +86,7 @@
                   <v-text-field
                     v-model="store.mobile_phone"
                     variant="outlined"
-                    label="Mobile Phone"
+                    label="Telefone"
                     :rules="[rules.required]"
                   ></v-text-field>
                 </v-col>
@@ -106,7 +106,7 @@
                     v-model="store.company_type"
                     :items="companyTypes"
                     variant="outlined"
-                    label="Company Type"
+                    label="Tipo de Empresa"
                     :rules="[rules.required]"
                   ></v-select>
                 </v-col>
@@ -114,7 +114,7 @@
                   <v-text-field
                     v-model="store.income_value"
                     variant="outlined"
-                    label="Income Value"
+                    label="Faturamento"
                     type="number"
                     prefix="R$"
                     :rules="[rules.required]"
@@ -130,7 +130,7 @@
                     dense
                     accept="image/*"
                     variant="outlined"
-                    label="Logo"
+                    label="Logomarca da Loja"
                     prepend-icon="mdi-image"
                   ></v-file-input>
                 </v-col>
@@ -139,7 +139,7 @@
                     v-model="store.banner"
                     accept="image/*"
                     variant="outlined"
-                    label="Banner"
+                    label="Banner da Loja"
                     prepend-icon="mdi-image"
                   ></v-file-input>
                 </v-col>
@@ -155,7 +155,7 @@
                     type="submit"
                     size="large"
                   >
-                    Add Store
+                    Criar Loja
                   </v-btn>
                 </v-col>
               </v-row>

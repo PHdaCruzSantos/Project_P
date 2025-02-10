@@ -2,7 +2,7 @@
   <v-main>
     <v-container>
       <v-row>
-        <v-col cols="12" md="6" offset-md="3">
+        <v-col cols="12" md="12">
           <EditItem :itemId="itemId" />
         </v-col>
       </v-row>

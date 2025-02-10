@@ -59,7 +59,7 @@ const updateOrderStatus = async (orderId, status) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(status),
     credentials: "include",
   });
 

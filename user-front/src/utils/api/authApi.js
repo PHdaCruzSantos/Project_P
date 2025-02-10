@@ -1,5 +1,20 @@
 const apiUrl = import.meta.env.VITE_API_URL_BACKEND;
 
+const handleApiError = async (response) => {
+  const data = await response.json();
+
+  // Handle different types of error responses
+  if (response.status === 401) {
+    throw new Error("Invalid credentials");
+  } else if (response.status === 404) {
+    throw new Error("User not found");
+  } else if (response.status === 409) {
+    throw new Error("Email already exists");
+  }
+
+  throw new Error(data.message || "An error occurred");
+};
+
 const login = async (credentials) => {
   const response = await fetch(`${apiUrl}/auth//login-client`, {
     method: "POST",
@@ -9,8 +24,7 @@ const login = async (credentials) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to login");
+    await handleApiError(response);
   }
 
   return await response.json();
@@ -24,8 +38,7 @@ const register = async (userData) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to register");
+    await handleApiError(response);
   }
 
   return await response.json();

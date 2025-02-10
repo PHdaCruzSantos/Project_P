@@ -5,19 +5,19 @@
         <v-card class="mb-4">
           <v-card-title class="success--text pa-4 text-center">
             <v-icon large color="success" class="mr-2">mdi-check-circle</v-icon>
-            Payment Confirmed!
+            Pagamento Confirmado!
           </v-card-title>
 
           <v-card-text class="text-center pa-4">
-            <p class="text-h6 mb-4">Thank you for your purchase!</p>
+            <p class="text-h6 mb-4">Obrigado pela sua compra!</p>
             <p class="mb-4">
-              Your order has been confirmed and will be processed shortly.
+              Seu pedido foi confirmado e será processado em breve.
             </p>
 
             <v-divider class="my-4"></v-divider>
 
             <div class="text-left mb-4">
-              <h3 class="text-h6 mb-2">Order Summary</h3>
+              <h3 class="text-h6 mb-2">Resumo do Pedido</h3>
               <v-list>
                 <v-list-item
                   v-for="item in paymentStore.orderItems"
@@ -45,7 +45,7 @@
             <v-divider class="my-4"></v-divider>
 
             <v-btn color="primary" block @click="router.push('/')" class="mt-4">
-              Back to Home
+              Voltar para Início
             </v-btn>
           </v-card-text>
         </v-card>

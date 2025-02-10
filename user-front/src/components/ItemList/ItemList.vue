@@ -6,7 +6,7 @@
         <v-select
           v-model="selectedCategory"
           :items="categories"
-          label="Category"
+          label="Categorias:"
           variant="outlined"
           dense
           :color="palette.brand.main"
@@ -17,7 +17,7 @@
         <v-select
           v-model="sortBy"
           :items="sortOptions"
-          label="Sort by"
+          label="Ordenar por:"
           variant="outlined"
           dense
           :color="palette.brand.main"
@@ -59,7 +59,7 @@
     <!-- No Items Message -->
     <v-row v-if="!loading && filteredItems.length === 0">
       <v-col cols="12" class="text-center">
-        <v-alert type="info">No items found</v-alert>
+        <v-alert type="info">Nenhum item encontrado</v-alert>
       </v-col>
     </v-row>
   </v-container>
@@ -99,9 +99,15 @@ export default {
     const currentPage = ref(1);
     const itemsPerPage = ref(12);
     const selectedCategory = ref(null);
-    const categories = ref(["All", "Electronics", "Clothing", "Books"]);
+    const categories = ref(["Todas", "Electronics", "Clothing", "Books"]);
     const sortBy = ref("active");
-    const sortOptions = ["All", "price-low", "price-high", "rating", "active"];
+    const sortOptions = [
+      "Todas",
+      "Ordem de Preço Crescente",
+      "Ordem de Preço Decrescente",
+      "Availação",
+      "Ativos",
+    ];
 
     // Fetch items
     const fetchItems = async () => {
@@ -127,16 +133,16 @@ export default {
 
       // Apply sorting
       switch (sortBy.value) {
-        case "price-low":
+        case "Ordem de Preço Crescente":
           result.sort((a, b) => a.price - b.price);
           break;
-        case "price-high":
+        case "Ordem de Preço Decrescente":
           result.sort((a, b) => b.price - a.price);
           break;
-        case "rating":
+        case "Avaliação":
           result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
           break;
-        case "active":
+        case "Ativos":
           result = result.filter((item) => item.status === "active");
           result.sort((a, b) => a.name.localeCompare(b.name));
           break;

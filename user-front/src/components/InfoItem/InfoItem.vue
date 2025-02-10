@@ -42,9 +42,9 @@
 
             <!-- Tabs for Different Sections -->
             <v-tabs v-model="activeTab" grow>
-              <v-tab value="details">Details</v-tab>
-              <v-tab value="variants">Variants</v-tab>
-              <v-tab value="reviews">Reviews</v-tab>
+              <v-tab value="details">Detalhes</v-tab>
+              <v-tab value="variants">Variantes</v-tab>
+              <v-tab value="reviews">Avaliações</v-tab>
             </v-tabs>
 
             <v-window v-model="activeTab" class="mt-4">
@@ -67,7 +67,7 @@
                     <!-- Promotions -->
                     <div v-if="itemInfo?.promotions?.length" class="mt-4">
                       <h3 class="text-h6 font-weight-bold mb-2">
-                        Active Promotions
+                        Promoções Ativas para este item
                       </h3>
                       <v-list density="comfortable">
                         <v-list-item
@@ -200,7 +200,7 @@
                 @click="addToCart"
               >
                 <v-icon left>mdi-cart-plus</v-icon>
-                Add to Cart
+                Adicionar ao Carrinho
                 {{ selectedVariant ? `- ${selectedVariant.name}` : "" }}
               </v-btn>
             </v-card-actions>

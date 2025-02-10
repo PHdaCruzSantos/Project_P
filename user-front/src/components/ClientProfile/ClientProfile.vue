@@ -7,13 +7,14 @@
         <v-card class="mb-4">
           <v-card-text>
             <div class="d-flex align-center">
-              <v-avatar size="100" color="primary">
-                <v-img
-                  v-if="client?.profile_image"
-                  :src="client.profile_image"
-                />
-                <v-icon v-else size="48">mdi-account</v-icon>
+              <v-avatar
+                v-if="client?.profile_image"
+                :image="getImageUrl(client.profile_image)"
+                size="100"
+                color="primary"
+              >
               </v-avatar>
+              <v-icon v-else size="48">mdi-account</v-icon>
               <div class="ml-4">
                 <h2 class="text-h4">{{ client?.name }}</h2>
                 <p class="text-subtitle-1">{{ client?.email }}</p>
@@ -27,10 +28,16 @@
       <v-col cols="12">
         <v-card>
           <v-tabs v-model="activeTab" grow>
-            <v-tab value="info">Personal Info</v-tab>
-            <v-tab value="addresses">Addresses</v-tab>
-            <v-tab value="orders">Orders</v-tab>
-            <v-tab value="favorites">Favorites</v-tab>
+            <v-tab value="info" prepend-icon="mdi-account-circle"
+              >Informações do Usuário</v-tab
+            >
+            <v-tab value="addresses" prepend-icon="mdi-map-marker-star-outline"
+              >Endereços</v-tab
+            >
+            <v-tab value="orders" prepend-icon="mdi-package-variant"
+              >Pedidos</v-tab
+            >
+            <v-tab value="favorites" prepend-icon="mdi-heart">Favoritos</v-tab>
           </v-tabs>
 
           <v-window v-model="activeTab">
@@ -40,7 +47,7 @@
                 <v-form @submit.prevent="updatePersonalInfo">
                   <v-text-field
                     v-model="editedClient.name"
-                    label="Name"
+                    label="Nome Completo"
                     :rules="[(v) => !!v || 'Name is required']"
                   />
                   <v-text-field
@@ -56,7 +63,7 @@
                     mask="###.###.###-##"
                   />
                   <v-btn color="primary" type="submit" :loading="loading">
-                    Update Profile
+                    Atualizar Dados do Perfíl
                   </v-btn>
                 </v-form>
               </v-card-text>
@@ -70,7 +77,7 @@
                   class="mb-4"
                   @click="showAddAddressDialog"
                 >
-                  Add New Address
+                  Adicionar Novo Endereço
                 </v-btn>
 
                 <v-row>
@@ -83,9 +90,11 @@
                     <v-card variant="outlined">
                       <v-card-text>
                         <p><strong>CEP:</strong> {{ address.cep }}</p>
-                        <p><strong>Address:</strong> {{ address.address }}</p>
-                        <p><strong>City:</strong> {{ address.city }}</p>
-                        <p><strong>State:</strong> {{ address.state }}</p>
+                        <p>
+                          <strong>Logadouro(Rua):</strong> {{ address.address }}
+                        </p>
+                        <p><strong>Estado:</strong> {{ address.state }}</p>
+                        <p><strong>Cidade:</strong> {{ address.city }}</p>
                       </v-card-text>
                       <v-card-actions>
                         <v-btn
@@ -93,14 +102,14 @@
                           color="primary"
                           @click="editAddress(address)"
                         >
-                          Edit
+                          Editar
                         </v-btn>
                         <v-btn
                           variant="text"
                           color="error"
                           @click="deleteAddress(address.id)"
                         >
-                          Delete
+                          Deletar
                         </v-btn>
                       </v-card-actions>
                     </v-card>
@@ -124,7 +133,7 @@
                         class="d-flex align-center justify-space-between pa-4 mx-4"
                       >
                         <span class="text-h6">
-                          Order #{{ order.id.slice(0, 8) }}
+                          Código do Pedido #{{ order.id.slice(0, 8) }}
                         </span>
                         <div class="d-flex gap-2">
                           <v-chip
@@ -162,7 +171,7 @@
                                   {{ formatDate(order.created_at) }}
                                 </v-list-item-title>
                                 <v-list-item-subtitle
-                                  >Order Date</v-list-item-subtitle
+                                  >Data do Pedido</v-list-item-subtitle
                                 >
                               </v-list-item>
 
@@ -178,7 +187,7 @@
                                   {{ formatPrice(order.total_amount) }}
                                 </v-list-item-title>
                                 <v-list-item-subtitle
-                                  >Total Amount</v-list-item-subtitle
+                                  >Valor Total</v-list-item-subtitle
                                 >
                               </v-list-item>
                             </v-list>
@@ -196,7 +205,7 @@
                                   {{ order.payment_method || "Not specified" }}
                                 </v-list-item-title>
                                 <v-list-item-subtitle
-                                  >Payment Method</v-list-item-subtitle
+                                  >Método de Pagamento</v-list-item-subtitle
                                 >
                               </v-list-item>
 
@@ -210,7 +219,7 @@
                                   {{ formatPrice(order.shipping_price) }}
                                 </v-list-item-title>
                                 <v-list-item-subtitle
-                                  >Shipping Cost</v-list-item-subtitle
+                                  >Valor do Frete</v-list-item-subtitle
                                 >
                               </v-list-item>
                             </v-list>
@@ -221,7 +230,7 @@
 
                         <div class="mb-3">
                           <div class="text-subtitle-2 mb-2">
-                            Shipping Address
+                            Endereço de Envio
                           </div>
                           <v-chip variant="outlined" class="pa-2">
                             <v-icon start size="small">mdi-map-marker</v-icon>
@@ -236,7 +245,7 @@
                                 <v-icon start size="small" class="me-2"
                                   >mdi-package</v-icon
                                 >
-                                Order Items ({{ order.items.length }})
+                                Items Pedidos ({{ order.items.length }})
                               </div>
                             </v-expansion-panel-title>
                             <v-expansion-panel-text>
@@ -268,7 +277,7 @@
                                   </v-list-item-title>
                                   <v-list-item-subtitle>
                                     <span class="me-2"
-                                      >Quantity: {{ item.quantity }}x</span
+                                      >Quantidade: {{ item.quantity }}x</span
                                     >
                                     <span class="primary--text"
                                       >{{ formatPrice(item.price) }} each</span
@@ -350,7 +359,7 @@
                             size="small"
                           />
                           <span class="text-caption ms-2">
-                            ({{ favoriteItem.reviews.length }} reviews)
+                            ({{ favoriteItem.reviews.length }} Avaloações)
                           </span>
                         </div>
 
@@ -383,15 +392,13 @@
                           :disabled="favoriteItem.item.status !== 'active'"
                           @click="cartStore.addToCart(favoriteItem.item)"
                         >
-                          Add to Cart
+                          Adicionar ao Carrinho
                         </v-btn>
                         <v-spacer />
                         <v-btn
                           icon
                           color="error"
-                          @click="
-                            clientStore.toggleFavorite(favoriteItem.item.id)
-                          "
+                          @click.stop="handleFavorite(favoriteItem.item.id)"
                         >
                           <v-icon>mdi-heart</v-icon>
                         </v-btn>
@@ -532,7 +539,7 @@ export default {
     const cartStore = useCartStore();
     const loading = ref(false);
     const addressDialog = ref(false);
-    const activeTab = ref(`${props.tab}`);
+    const activeTab = ref(props.tab);
     const addresses = ref([]);
     const orders = ref([]);
     const favoriteItems = ref([]);
@@ -560,11 +567,11 @@ export default {
     };
 
     const getPaymentStatusLabel = (status) => {
-      if (!status) return "Payment Pending";
+      if (!status) return "Pagamento Pendente";
       const labels = {
-        RECEIVED: "Payment Confirmed",
-        pending: "Payment Pending",
-        failed: "Payment Failed",
+        RECEIVED: "Pagamento Cnfrmado",
+        pending: "Pagamento Pendente",
+        failed: "Falha no Pagamento",
       };
       return labels[status] || status;
     };
@@ -655,6 +662,7 @@ export default {
       try {
         loading.value = true;
         const userData = await clientsApi.getClient(clientStore.currentUser.id);
+        console.log("Client data loaded:", userData);
         client.value = userData;
         editedClient.value = { ...userData };
 
@@ -684,6 +692,19 @@ export default {
       } finally {
         loading.value = false;
         loadingFavorites.value = false;
+      }
+    };
+
+    const handleFavorite = async (itemId) => {
+      if (!clientStore.isLoggedIn) return;
+      try {
+        loading.value = true;
+        await clientStore.toggleFavorite(itemId);
+        await loadClientData();
+      } catch (error) {
+        console.error("Failed to toggle favorite:", error);
+      } finally {
+        loading.value = false;
       }
     };
 
@@ -779,8 +800,11 @@ export default {
         const ordersData = await orderApi.getClientOrders(
           clientStore.currentUser.id
         );
-        orders.value = ordersData;
-        console.log(orders.value);
+        console.log("Orders loaded:", ordersData);
+        orders.value = ordersData.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
 
         // Inicia verificação de pagamento para todos os pedidos após carregar
         startAllPaymentChecks();
@@ -808,6 +832,7 @@ export default {
     onMounted(async () => {
       if (clientStore.currentUser) {
         await loadClientData();
+        activeTab.value = props.tab;
       } else {
         router.push("/");
       }
@@ -823,6 +848,7 @@ export default {
       addresses,
       orders,
       favoriteItems,
+      handleFavorite,
       showAddAddressDialog,
       editAddress,
       saveAddress,

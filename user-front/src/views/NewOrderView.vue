@@ -4,14 +4,14 @@
       <v-stepper-header>
         <v-stepper-item value="0" title="Shipping" :complete="currentStep > 0">
           <v-icon>mdi-truck-delivery</v-icon>
-          Shipping
+          Envio do Pedido
         </v-stepper-item>
 
         <v-divider />
 
         <v-stepper-item value="1" title="Payment" :complete="currentStep > 1">
           <v-icon>mdi-credit-card</v-icon>
-          Payment
+          Pagamento do Pedido
         </v-stepper-item>
       </v-stepper-header>
 

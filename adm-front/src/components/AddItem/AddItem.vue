@@ -7,7 +7,8 @@
           <v-icon @click="goBack" :style="{ color: palette.lightblue[300] }">
             mdi-arrow-left
           </v-icon>
-          Add New Item into <span class="text-primary">{{ storeName }}</span>
+          Adicionar novo item à:
+          <span class="text-primary">{{ storeName }}</span>
         </v-card-title>
 
         <v-divider></v-divider>
@@ -18,8 +19,8 @@
             <!-- Nome -->
             <v-text-field
               v-model="name"
-              :rules="[(v) => !!v || 'Name is required']"
-              label="Item Name"
+              :rules="[(v) => !!v || 'Nome é obrigatório']"
+              label="Nome do Item"
               variant="outlined"
               dense
               class="styled-input"
@@ -33,8 +34,8 @@
             <!-- Descrição -->
             <v-text-field
               v-model="description"
-              :rules="[(v) => !!v || 'Description is required']"
-              label="Description"
+              :rules="[(v) => !!v || 'Descrição é obrigatória']"
+              label="Descrição"
               variant="outlined"
               dense
               class="styled-input"
@@ -51,12 +52,12 @@
                 <v-text-field
                   v-model="price"
                   :rules="[
-                    (v) => !!v || 'Price is required',
+                    (v) => !!v || 'Preço é obrigatório',
                     (v) =>
                       /^\d+(\.\d{1,2})?$/.test(v) ||
-                      'Price must be a valid number',
+                      'Preço deve ser um número válido',
                   ]"
-                  label="Price (R$)"
+                  label="Preço (R$)"
                   variant="outlined"
                   dense
                   clearable
@@ -68,13 +69,17 @@
                   </template>
                 </v-text-field>
               </v-col>
-              <!-- Type -->
+              <!-- Tipo -->
               <v-col cols="6">
                 <v-select
                   v-model="type"
-                  :items="types"
-                  :rules="[(v) => !!v || 'Type is required']"
-                  label="Type"
+                  :items="[
+                    { text: 'Comida', value: 'food' },
+                    { text: 'Bebida', value: 'drink' },
+                    { text: 'Sobremesa', value: 'dessert' },
+                  ]"
+                  :rules="[(v) => !!v || 'Tipo é obrigatório']"
+                  label="Tipo"
                   variant="outlined"
                   dense
                   class="styled-input"
@@ -87,15 +92,14 @@
               </v-col>
             </v-row>
 
-            <!-- Inputs lado a lado -->
             <v-row>
               <!-- Categoria -->
               <v-col cols="6">
                 <v-select
                   v-model="category"
                   :items="categories"
-                  :rules="[(v) => !!v || 'Category is required']"
-                  label="Category"
+                  :rules="[(v) => !!v || 'Categoria é obrigatória']"
+                  label="Categoria"
                   variant="outlined"
                   dense
                   class="styled-input"
@@ -112,7 +116,7 @@
                 <v-select
                   v-model="status"
                   :items="statuses"
-                  :rules="[(v) => !!v || 'Status is required']"
+                  :rules="[(v) => !!v || 'Status é obrigatório']"
                   label="Status"
                   variant="outlined"
                   dense
@@ -132,9 +136,9 @@
               multiple
               accept="image/*"
               :rules="[
-                (v) => v?.length > 0 || 'At least one image is required',
+                (v) => v?.length > 0 || 'Pelo menos uma imagem é obrigatória',
               ]"
-              label="Upload Images"
+              label="Enviar Imagens"
               variant="outlined"
               dense
               class="styled-input"
@@ -144,57 +148,24 @@
               <template #prepend>
                 <v-icon color="blue">mdi-image-multiple</v-icon>
               </template>
-              <template v-slot:selection="{ fileNames }">
-                <v-chip
-                  v-for="fileName in fileNames"
-                  :key="fileName"
-                  class="me-2"
-                  color="primary"
-                  size="small"
-                  label
-                >
-                  {{ fileName }}
-                </v-chip>
-              </template>
             </v-file-input>
 
-            <!-- Visualização das Imagens -->
-            <v-row v-if="imagePreviews.length" class="mt-4">
-              <v-col cols="12" class="text-center">
-                <div class="preview-container">
-                  <v-row dense>
-                    <v-col
-                      v-for="(preview, index) in imagePreviews"
-                      :key="index"
-                      cols="4"
-                    >
-                      <v-img
-                        :src="preview"
-                        aspect-ratio="16/9"
-                        contain
-                        class="mb-2"
-                      ></v-img>
-                      <v-btn small text color="red" @click="removeImage(index)">
-                        Remove
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                </div>
-              </v-col>
-            </v-row>
+            <!-- Botões de Ação -->
+            <v-card-actions>
+              <v-btn color="grey darken-1" text @click="clearForm"
+                >Limpar</v-btn
+              >
+              <v-spacer></v-spacer>
+              <v-btn
+                :disabled="!valid"
+                color="blue darken-2"
+                @click="handleSubmit"
+              >
+                Salvar
+              </v-btn>
+            </v-card-actions>
           </v-form>
         </v-card-text>
-
-        <v-divider></v-divider>
-
-        <!-- Ações -->
-        <v-card-actions>
-          <v-btn color="grey darken-1" text @click="clearForm"> Clear </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn :disabled="!valid" color="blue darken-2" @click="handleSubmit">
-            Submit
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-container>
   </v-main>
@@ -289,10 +260,11 @@ export default {
     const fatchStoreInfos = async () => {
       try {
         const response = await storesApi.getStore(props.storeId);
-        storeName.value = response.name;
-        storeDescription.value = response.description;
-        storeImage.value = response.image;
-        storeStatus.value = response.status;
+        console.log("storeInfos", response);
+        storeName.value = response.store.name;
+        storeDescription.value = response.store.description;
+        storeImage.value = response.store.image;
+        storeStatus.value = response.store.status;
 
         console.log("storeInfos", response);
       } catch (error) {

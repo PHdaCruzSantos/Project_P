@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-card class="mb-4">
-      <v-card-title class="text-h5">Delivery Address</v-card-title>
+      <v-card-title class="text-h5">Endereço para Envio</v-card-title>
       <v-card-text>
         <v-select
           v-model="selectedAddress"
@@ -21,7 +21,7 @@
                 block
                 to="/profile?tab=addresses"
               >
-                Add New Address
+                Adicionar novo Endereço
               </v-btn>
             </v-list-item>
           </template>
@@ -59,7 +59,7 @@
 
           <!-- Shipping options -->
           <v-card-text v-if="selectedAddress">
-            <div class="text-subtitle-1 mb-2">Shipping Options</div>
+            <div class="text-subtitle-1 mb-2">Opções de Envio</div>
             <v-radio-group
               v-model="selectedShipping[storeId]"
               v-if="shippingRates[storeId]?.length"
@@ -93,7 +93,7 @@
             v-if="selectedShipping[storeId]"
             class="d-flex justify-space-between pa-4"
           >
-            <span>Shipping:</span>
+            <span>Valor do Envio:</span>
             <span>{{ formatPrice(selectedShipping[storeId].price) }}</span>
           </div>
         </v-card-text>
@@ -102,19 +102,19 @@
 
     <!-- Order Summary -->
     <v-card class="mt-4">
-      <v-card-title>Order Summary</v-card-title>
+      <v-card-title>Resumo do pedido</v-card-title>
       <v-card-text>
         <div class="d-flex justify-space-between mb-2">
           <span>Items Total:</span>
           <span>{{ formatPrice(calculateTotal()) }}</span>
         </div>
         <div class="d-flex justify-space-between mb-2">
-          <span>Shipping Total:</span>
+          <span>Valor Total de Envio:</span>
           <span>{{ formatPrice(calculateShippingTotal()) }}</span>
         </div>
         <v-divider class="my-2" />
         <div class="d-flex justify-space-between text-h6">
-          <span>Grand Total:</span>
+          <span>Total:</span>
           <span>{{ formatPrice(calculateGrandTotal()) }}</span>
         </div>
       </v-card-text>
@@ -126,7 +126,7 @@
           :disabled="!canProceed"
           @click="proceedToPayment"
         >
-          Proceed to Payment
+          Continuar para Pagamento
         </v-btn>
       </v-card-actions>
     </v-card>

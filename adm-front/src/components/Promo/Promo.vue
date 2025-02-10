@@ -8,7 +8,7 @@
     >
       <v-toolbar-title class="text-h5 font-weight-bold">
         <v-icon icon="mdi-ticket-percent" class="mr-2"></v-icon>
-        Promotions & Coupons
+        Promoções & Cupons
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-tooltip location="start">
@@ -21,10 +21,10 @@
             @click="createCoupon"
             prepend-icon="mdi-plus"
           >
-            New Coupon
+            Novo Cupo
           </v-btn>
         </template>
-        <span>Create a new discount coupon</span>
+        <span>Criar novo Cupon de desconto</span>
       </v-tooltip>
     </v-toolbar>
 
@@ -47,7 +47,7 @@
               <v-card-text>
                 <p class="mb-4">{{ promo.description }}</p>
                 <v-chip color="primary" class="mb-4">
-                  Discount: {{ promo.discount }}%
+                  Desconto: {{ promo.discount }}%
                 </v-chip>
                 <v-switch
                   v-model="promo.active"
@@ -87,7 +87,7 @@
                 {{ store.name }}
               </div>
               <div class="text-subtitle-2 text-grey-lighten-2">
-                Active Coupons: {{ store.coupons?.length || 0 }}
+                Cupons Ativos: {{ store.coupons?.length || 0 }}
               </div>
             </div>
           </v-toolbar>
@@ -113,25 +113,25 @@
                     scope="col"
                     class="text-left text-subtitle-1 font-weight-bold py-4"
                   >
-                    Code
+                    Código
                   </th>
                   <th
                     class="text-left text-subtitle-1 font-weight-bold"
                     scope="col"
                   >
-                    Discount
+                    Desconto
                   </th>
                   <th
                     scope="col"
                     class="text-left text-subtitle-1 font-weight-bold"
                   >
-                    Valid Until
+                    Valido até
                   </th>
                   <th
                     scope="col"
                     class="text-left text-subtitle-1 font-weight-bold"
                   >
-                    Products
+                    Produtos
                   </th>
                   <th
                     scope="col"
@@ -143,7 +143,7 @@
                     scope="col"
                     class="text-left text-subtitle-1 font-weight-bold"
                   >
-                    Actions
+                    Ações
                   </th>
                 </tr>
               </thead>
@@ -210,7 +210,7 @@
                         size="x-small"
                         color="grey-lighten-1"
                       >
-                        No products selected
+                        Nenhum produto selecionado
                       </v-chip>
                     </div>
                   </td>
@@ -467,21 +467,21 @@ export default {
       {
         id: 1,
         name: "Black Friday",
-        description: "Special discounts for Black Friday",
+        description: "Promoção especial de Black Friday",
         discount: 30,
         active: false,
       },
       {
         id: 2,
-        name: "Christmas Sale",
-        description: "Holiday season special offers",
+        name: "Natal",
+        description: "Ofertas de Natal",
         discount: 25,
         active: false,
       },
       {
         id: 3,
-        name: "Summer Sale",
-        description: "Hot deals for the summer",
+        name: "Descontos de Verão",
+        description: "Promoções de Verão",
         discount: 20,
         active: false,
       },
@@ -501,7 +501,7 @@ export default {
       try {
         isLoading.value = true;
         // Get stores first
-        const resStores = await storesApi.getStores(userStore.user.user.id);
+        const resStores = await storesApi.getStores(userStore.user.id);
 
         // Map stores and get their coupons
         const fetchStoreData = async (store) => {

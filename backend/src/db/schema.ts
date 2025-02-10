@@ -315,12 +315,8 @@ export const ordersTable = sqliteTable("orders", {
   shipping_price: real("shipping_price").notNull(), // Valor do frete
   tracking_code: text("tracking_code"), // Código de rastreamento
   notes: text("notes"), // Observações do pedido
-  created_at: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updated_at: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  created_at: integer("created_at", { mode: "timestamp" }).notNull(),
+  updated_at: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
 // Tabela de itens do pedido
@@ -335,9 +331,7 @@ export const orderItemsTable = sqliteTable("order_items", {
   quantity: integer("quantity").notNull(), // Quantidade do item
   price: real("price").notNull(), // Preço unitário do item no momento da compra
   item_name: text("item_name").notNull(), // Nome do item no momento da compra
-  created_at: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  created_at: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
 export const ordersRelations = relations(ordersTable, ({ many }) => ({

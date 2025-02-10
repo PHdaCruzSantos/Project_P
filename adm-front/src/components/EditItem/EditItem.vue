@@ -6,7 +6,7 @@
         <v-icon @click="goBack" :style="{ color: palette.lightblue[300] }">
           mdi-arrow-left
         </v-icon>
-        Edit Item
+        Edição de Item
       </v-card-title>
 
       <v-divider></v-divider>
@@ -16,7 +16,7 @@
         <v-form ref="form" v-model="valid" lazy-validation>
           <v-row>
             <!-- Imagem Principal -->
-            <v-col cols="12" class="d-flex align-center justify-center">
+            <v-col cols="6" class="d-flex align-center justify-center">
               <v-img
                 v-if="itemData.image"
                 :src="`${URL_BACKEND}/upload/images/${itemData.image}`"
@@ -27,24 +27,24 @@
             </v-col>
 
             <!-- Informações -->
-            <v-col cols="12">
+            <v-col cols="6">
               <v-text-field
                 v-model="itemData.name"
-                label="Item Name"
+                label="Nome do Item"
                 outlined
                 dense
               ></v-text-field>
 
               <v-text-field
                 v-model="itemData.description"
-                label="Description"
+                label="Descrição"
                 outlined
                 dense
               ></v-text-field>
 
               <v-text-field
                 v-model="itemData.price"
-                label="Price (R$)"
+                label="Preço (R$)"
                 type="number"
                 outlined
                 dense
@@ -53,14 +53,14 @@
               <v-select
                 v-model="itemData.category"
                 :items="categories"
-                label="Category"
+                label="Categoria"
                 outlined
                 dense
               ></v-select>
 
               <v-file-input
                 v-model="newImages"
-                label="Upload Images"
+                label="Enviar Imagens"
                 outlined
                 dense
                 multiple
@@ -76,7 +76,7 @@
                 >
                   <v-img :src="preview" max-height="100px" />
                   <v-btn small text color="red" @click="removeImage(index)">
-                    Remove
+                    Remover
                   </v-btn>
                 </v-col>
               </v-row>
@@ -97,9 +97,11 @@
 
       <!-- Ações -->
       <v-card-actions>
-        <v-btn color="grey darken-1" text @click="clearForm">Clear</v-btn>
+        <v-btn color="grey darken-1" text @click="clearForm">Limpar</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-2" @click="handleSubmit">Save Changes</v-btn>
+        <v-btn color="blue darken-2" @click="handleSubmit"
+          >Salvar Mudanças</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-container>

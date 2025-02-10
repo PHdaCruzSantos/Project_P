@@ -10,7 +10,7 @@
     :style="cardOpacityStyle"
   >
     <div v-if="item.status !== 'active'" class="unavailable-overlay">
-      <v-chip color="error" class="ma-2"> Indisponível </v-chip>
+      <v-chip color="error" class="ma-2">Indisponível no momento!</v-chip>
     </div>
     <!-- Image Carousel -->
     <v-carousel
@@ -44,7 +44,7 @@
         class="mr-2"
       >
         <v-icon start size="small">mdi-truck-fast</v-icon>
-        Free Shipping
+        Frete Grátis
       </v-chip>
       <v-chip color="black" size="small" class="mr-2" text-color="white">
         <v-icon start size="small">mdi-tag</v-icon>
@@ -96,7 +96,7 @@
         :disabled="!item.status === 'active' || !clientStore.isLoggedIn"
       >
         <v-icon left>mdi-cart-plus</v-icon>
-        Add to Cart
+        Adicionar ao carrinho
       </v-btn>
       <v-spacer></v-spacer>
       <v-btn

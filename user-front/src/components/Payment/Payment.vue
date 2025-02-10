@@ -7,10 +7,10 @@
         prepend-icon="mdi-arrow-left"
         @click="$router.push('/shipping')"
       >
-        Back to Shipping
+        Voltar às Compras
       </v-btn>
       <v-divider vertical class="mx-4" />
-      <h1 class="text-h4 font-weight-medium">Payment</h1>
+      <h1 class="text-h4 font-weight-medium">Pagamento</h1>
     </div>
 
     <!-- Payment Progress -->
@@ -21,13 +21,13 @@
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center pa-4">
             <v-icon icon="mdi-qrcode" class="mr-2" color="primary" />
-            <span class="text-h5">PIX Payment</span>
+            <span class="text-h5">Pagamento por PIX</span>
           </v-card-title>
 
           <v-card-text class="pa-4">
             <template v-if="!pixCode">
               <v-progress-circular indeterminate color="primary" class="mb-4" />
-              <div class="text-body-1">Generating PIX code...</div>
+              <div class="text-body-1">Gegando código QR do PIX...</div>
             </template>
 
             <template v-else>
@@ -44,7 +44,7 @@
                   prepend-icon="mdi-content-copy"
                   @click="copyPixCode"
                 >
-                  Copy PIX Code
+                  Copiar Código do PIX
                 </v-btn>
 
                 <v-alert
@@ -53,15 +53,15 @@
                   variant="tonal"
                   class="mb-4"
                 >
-                  PIX code copied to clipboard!
+                  Código do PIX copiado para a área de transferência
                 </v-alert>
 
                 <div class="text-body-2 mb-2">
-                  Expires in: {{ formatExpirationDate(pixCode.expirationDate) }}
+                  Expira em: {{ formatExpirationDate(pixCode.expirationDate) }}
                 </div>
 
                 <div class="text-body-1 mb-4">
-                  Payment will be automatically confirmed once processed.
+                  Pagamento por PIX é processado em até 5 minutos
                 </div>
 
                 <v-progress-linear
@@ -80,7 +80,7 @@
         <v-card>
           <v-card-title class="d-flex align-center pa-4">
             <v-icon icon="mdi-receipt" class="mr-2" color="primary" />
-            <span class="text-h6">Order Summary</span>
+            <span class="text-h6">Resumo do Pedido</span>
           </v-card-title>
 
           <v-card-text class="pa-4">
@@ -89,7 +89,7 @@
               <span>{{ formatPrice(orderTotal) }}</span>
             </div>
             <div class="d-flex justify-space-between mb-2">
-              <span>Shipping:</span>
+              <span>Envio:</span>
               <span>{{ formatPrice(shippingTotal) }}</span>
             </div>
             <v-divider class="my-4" />
@@ -292,12 +292,12 @@ export default {
 
           if (status === "RECEIVED" || status === "CONFIRMED") {
             // Update order status when payment is confirmed
-            await orderApi.updateOrderStatus(orderId, status);
+            let resOrder = await orderApi.updateOrderStatus(orderId, status);
             clearInterval(checkInterval);
-            await router.push("/order-confirmation");
+            // await router.push("/order-confirmation");
           } else if (status === "FAILED" || status === "CANCELLED") {
             // Update order status when payment fails
-            await orderApi.updateOrderStatus(orderId, status);
+            let resOrder = await orderApi.updateOrderStatus(orderId, status);
             clearInterval(checkInterval);
             error.value = "Payment failed or cancelled";
           }

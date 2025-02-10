@@ -68,6 +68,12 @@ const routes = [
     component: PromoView,
     props: true,
   },
+  {
+    path: "/store-orders",
+    name: "StoreOrders",
+    component: () => import("@/components/StoreOrders/StoreOrders.vue"),
+    meta: { requiresAuth: true },
+  },
   // redirect to home if no route is matched
   {
     path: "/:pathMatch(.*)*",
