@@ -152,8 +152,7 @@
             </v-form>
           </v-card-text>
 
-          <v-card-actions>
-            <v-spacer></v-spacer>
+          <v-card-actions class="px-6 pb-4">
             <v-btn
               :loading="isLoggingIn"
               :color="palette.dodgerblue[400]"
@@ -162,6 +161,7 @@
             >
               {{ isRegisterMode ? "Já Possui uma conta?" : "Criar Conta" }}
             </v-btn>
+            <v-spacer></v-spacer>
             <v-btn
               :loading="isLoggingIn"
               :color="palette.dodgerblue[300]"

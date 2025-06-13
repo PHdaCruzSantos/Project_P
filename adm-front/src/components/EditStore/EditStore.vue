@@ -1,137 +1,320 @@
 <template>
-  <v-container>
-    <v-card class="elevation-3 mx-auto" max-width="800px">
-      <!-- Header -->
-      <v-card-title class="text-h5 font-weight-bold d-flex align-center">
-        <v-icon @click="goBack" :style="{ color: palette.lightblue[300] }">
-          mdi-arrow-left
-        </v-icon>
-        Edição de Loja
-      </v-card-title>
-
-      <v-divider></v-divider>
-
-      <v-card-text>
-        <!-- Store Images Preview -->
-        <v-row>
-          <v-col cols="12" md="6" class="text-center">
-            <p class="text-subtitle-1">Logomarca da Loja</p>
-            <v-img
-              :src="logoPreview || `${URL_BACKEND}/upload/images/${store.logo}`"
-              alt="Store Logo"
-              class="store-image mx-auto"
-              max-height="150"
-              contain
-            ></v-img>
-            <v-file-input
-              v-model="newLogo"
-              label="Update Logo"
-              accept="image/*"
-              @change="handleLogoChange"
-              prepend-icon="mdi-camera"
-              outlined
-              dense
-            ></v-file-input>
-            <v-btn
-              v-if="newLogo"
-              color="primary"
-              small
-              @click="updateLogo"
-              :loading="uploading.logo"
-            >
-              Atualizar Logomarca
-            </v-btn>
-          </v-col>
-
-          <v-col cols="12" md="6" class="text-center">
-            <p class="text-subtitle-1">Banner da Loja</p>
-            <v-img
-              :src="
-                bannerPreview || `${URL_BACKEND}/upload/images/${store.banner}`
-              "
-              alt="Store Banner"
-              class="store-image mx-auto"
-              max-height="150"
-              contain
-            ></v-img>
-            <v-file-input
-              v-model="newBanner"
-              label="Banner da Loja"
-              accept="image/*"
-              @change="handleBannerChange"
-              prepend-icon="mdi-image"
-              outlined
-              dense
-            ></v-file-input>
-            <v-btn
-              v-if="newBanner"
-              color="primary"
-              small
-              @click="updateBanner"
-              :loading="uploading.banner"
-            >
-              Update Banner
-            </v-btn>
-          </v-col>
-        </v-row>
-
-        <!-- Store Information -->
-        <v-form ref="form">
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="store.name"
-                label="Nome da Loja*"
-                :rules="[rules.required]"
-                outlined
-                dense
-              ></v-text-field>
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="store.cnpj"
-                label="CNPJ/CPF*"
-                :rules="[rules.required]"
-                outlined
-                dense
-              ></v-text-field>
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="store.email"
-                label="Email de Contato*"
-                :rules="[rules.required, rules.email]"
-                outlined
-                dense
-              ></v-text-field>
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="store.address"
-                label="Endereço"
-                outlined
-                dense
-              ></v-text-field>
-            </v-col>
-          </v-row>
-        </v-form>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-btn color="error" text @click="clearForm">Limpar</v-btn>
+  <v-container class="py-8">
+    <v-card class="elevation-4 rounded-lg mx-auto" max-width="900px">
+      <!-- Header com gradiente -->
+      <v-toolbar flat :color="palette.lightblue[50]" class="rounded-t-lg">
+        <v-btn icon @click="goBack" variant="text" class="mr-2">
+          <v-icon :color="palette.lightblue[700]" size="medium"
+            >mdi-arrow-left</v-icon
+          >
+        </v-btn>
+        <v-toolbar-title class="text-h5 font-weight-bold">
+          Edição de Loja
+        </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn
           color="primary"
           @click="updateStoreInfo"
           :disabled="!isFormValid"
+          variant="tonal"
+          prepend-icon="mdi-content-save"
+          class="px-4"
+        >
+          Salvar Alterações
+        </v-btn>
+      </v-toolbar>
+
+      <v-divider></v-divider>
+
+      <!-- Loading state -->
+      <v-overlay v-model="isLoading" class="align-center justify-center">
+        <v-progress-circular
+          indeterminate
+          color="primary"
+          size="64"
+        ></v-progress-circular>
+      </v-overlay>
+
+      <v-card-text class="pt-6">
+        <!-- Tabs para organizar o conteúdo -->
+        <v-tabs
+          v-model="activeTab"
+          show-arrows
+          centered
+          slider-color="primary"
+          bg-color="grey-lighten-4"
+          class="mb-6 rounded"
+        >
+          <v-tab value="info">
+            <v-icon start>mdi-store</v-icon>
+            Informações Básicas
+          </v-tab>
+          <v-tab value="media">
+            <v-icon start>mdi-image</v-icon>
+            Imagens da Loja
+          </v-tab>
+        </v-tabs>
+
+        <v-window v-model="activeTab">
+          <!-- Tab de Informações Básicas -->
+          <v-window-item value="info">
+            <v-form ref="form" @submit.prevent="updateStoreInfo">
+              <v-sheet class="pa-4 rounded-lg bg-grey-lighten-5 mb-6">
+                <h3 class="text-subtitle-1 mb-4 font-weight-medium">
+                  <v-icon start color="primary" class="mr-2"
+                    >mdi-information-outline</v-icon
+                  >
+                  Dados da Loja
+                </h3>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="store.name"
+                      :label="storePlaceholder.name"
+                      :rules="[rules.required]"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-store"
+                      hide-details="auto"
+                      class="mb-3"
+                      placeholder="Nome da Loja"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="store.cnpj"
+                      :label="storePlaceholder.cnpj"
+                      placeholder="CPF/CNPJ da Loja"
+                      :rules="[rules.required]"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-identifier"
+                      hide-details="auto"
+                      class="mb-3"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="store.email"
+                      :label="storePlaceholder.email"
+                      placeholder="Email de Contato*"
+                      :rules="[rules.required, rules.email]"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-email"
+                      hide-details="auto"
+                      class="mb-3"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="store.address"
+                      :label="storePlaceholder.address"
+                      placeholder="Endereço"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-map-marker"
+                      hide-details="auto"
+                      class="mb-3"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-sheet>
+            </v-form>
+          </v-window-item>
+
+          <!-- Tab de Imagens -->
+          <v-window-item value="media">
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-card variant="outlined" class="mb-4">
+                  <v-card-item>
+                    <v-card-title class="text-subtitle-1">
+                      <v-icon start color="primary" class="mr-2"
+                        >mdi-image</v-icon
+                      >
+                      Logomarca da Loja
+                    </v-card-title>
+                  </v-card-item>
+
+                  <v-card-text class="text-center pt-0">
+                    <v-hover v-slot="{ isHovering, props }">
+                      <v-img
+                        v-bind="props"
+                        :src="
+                          logoPreview ||
+                          `${URL_BACKEND}/upload/images/${store.logo}`
+                        "
+                        alt="Store Logo"
+                        class="store-image mx-auto rounded elevation-1"
+                        max-height="180"
+                        contain
+                      >
+                        <v-overlay
+                          :model-value="isHovering"
+                          contained
+                          scrim="#036358"
+                          class="align-center justify-center"
+                          opacity="0.7"
+                        >
+                          <v-btn
+                            color="white"
+                            variant="text"
+                            icon="mdi-pencil"
+                            @click="$refs.logoInput.$el.click()"
+                          ></v-btn>
+                        </v-overlay>
+                      </v-img>
+                    </v-hover>
+
+                    <div class="mt-3 px-3">
+                      <v-file-input
+                        ref="logoInput"
+                        v-model="newLogo"
+                        label="Atualizar Logomarca"
+                        accept="image/*"
+                        @change="handleLogoChange"
+                        prepend-icon="mdi-camera"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                      ></v-file-input>
+
+                      <v-btn
+                        v-if="newLogo"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mt-3"
+                        @click="updateLogo"
+                        :loading="uploading.logo"
+                        prepend-icon="mdi-cloud-upload"
+                      >
+                        Atualizar Logomarca
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-card variant="outlined" class="mb-4">
+                  <v-card-item>
+                    <v-card-title class="text-subtitle-1">
+                      <v-icon start color="primary" class="mr-2"
+                        >mdi-panorama</v-icon
+                      >
+                      Banner da Loja
+                    </v-card-title>
+                  </v-card-item>
+
+                  <v-card-text class="text-center pt-0">
+                    <v-hover v-slot="{ isHovering, props }">
+                      <v-img
+                        v-bind="props"
+                        :src="
+                          bannerPreview ||
+                          `${URL_BACKEND}/upload/images/${store.banner}`
+                        "
+                        alt="Store Banner"
+                        class="store-image mx-auto rounded elevation-1"
+                        max-height="180"
+                        contain
+                      >
+                        <v-overlay
+                          :model-value="isHovering"
+                          contained
+                          scrim="#036358"
+                          class="align-center justify-center"
+                          opacity="0.7"
+                        >
+                          <v-btn
+                            color="white"
+                            variant="text"
+                            icon="mdi-pencil"
+                            @click="$refs.bannerInput.$el.click()"
+                          ></v-btn>
+                        </v-overlay>
+                      </v-img>
+                    </v-hover>
+
+                    <div class="mt-3 px-3">
+                      <v-file-input
+                        ref="bannerInput"
+                        v-model="newBanner"
+                        label="Atualizar Banner"
+                        accept="image/*"
+                        @change="handleBannerChange"
+                        prepend-icon="mdi-image"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                      ></v-file-input>
+
+                      <v-btn
+                        v-if="newBanner"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mt-3"
+                        @click="updateBanner"
+                        :loading="uploading.banner"
+                        prepend-icon="mdi-cloud-upload"
+                      >
+                        Atualizar Banner
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-window-item>
+        </v-window>
+      </v-card-text>
+
+      <v-divider class="mt-4"></v-divider>
+
+      <v-card-actions class="pa-4">
+        <v-btn
+          color="error"
+          variant="text"
+          @click="clearForm"
+          prepend-icon="mdi-refresh"
+        >
+          Limpar
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="primary"
+          @click="updateStoreInfo"
+          :disabled="!isFormValid"
+          :loading="isSaving"
+          variant="elevated"
+          prepend-icon="mdi-content-save"
         >
           Atualizar Informações da Loja
         </v-btn>
       </v-card-actions>
     </v-card>
+
+    <!-- Snackbars para feedback -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+    >
+      {{ snackbar.text }}
+      <template v-slot:actions>
+        <v-btn
+          variant="text"
+          icon="mdi-close"
+          @click="snackbar.show = false"
+        ></v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -144,6 +327,9 @@ import {
   VContainer,
   VCard,
   VCardTitle,
+  VCardText,
+  VCardActions,
+  VCardItem,
   VRow,
   VCol,
   VImg,
@@ -153,6 +339,18 @@ import {
   VBtn,
   VDivider,
   VIcon,
+  VTabs,
+  VTab,
+  VWindow,
+  VWindowItem,
+  VToolbar,
+  VToolbarTitle,
+  VSheet,
+  VHover,
+  VOverlay,
+  VProgressCircular,
+  VSnackbar,
+  VSpacer,
 } from "vuetify/components";
 import uploadsApi from "../../utils/api/uploads";
 
@@ -168,6 +366,9 @@ export default {
     VContainer,
     VCard,
     VCardTitle,
+    VCardText,
+    VCardActions,
+    VCardItem,
     VRow,
     VCol,
     VImg,
@@ -177,9 +378,22 @@ export default {
     VBtn,
     VDivider,
     VIcon,
+    VTabs,
+    VTab,
+    VWindow,
+    VWindowItem,
+    VToolbar,
+    VToolbarTitle,
+    VSheet,
+    VHover,
+    VOverlay,
+    VProgressCircular,
+    VSnackbar,
+    VSpacer,
   },
   setup(props) {
     const router = useRouter();
+    const form = ref(null);
     const store = ref({
       name: "",
       address: "",
@@ -189,16 +403,35 @@ export default {
       banner: "",
     });
 
+    const storePlaceholder = {};
+
     const newLogo = ref(null);
     const newBanner = ref(null);
     const logoPreview = ref("");
     const bannerPreview = ref("");
     const uploading = ref({ logo: false, banner: false });
+    const isLoading = ref(false);
+    const isSaving = ref(false);
+    const activeTab = ref("info");
     const URL_BACKEND = import.meta.env.VITE_API_URL_BACKEND;
 
+    // Feedback via snackbar
+    const snackbar = ref({
+      show: false,
+      text: "",
+      color: "success",
+      timeout: 3000,
+    });
+
+    const showMessage = (text, color = "success") => {
+      snackbar.value.text = text;
+      snackbar.value.color = color;
+      snackbar.value.show = true;
+    };
+
     const rules = {
-      required: (v) => !!v || "Field is required",
-      email: (v) => /.+@.+\..+/.test(v) || "Invalid email",
+      required: (v) => !!v || "Campo obrigatório",
+      email: (v) => /.+@.+\..+/.test(v) || "Email inválido",
     };
 
     const isFormValid = computed(() => {
@@ -228,11 +461,11 @@ export default {
             logo: newLogo.value.name,
           });
           store.value.logo = newLogo.value.name;
-          alert("Logo updated successfully!");
+          showMessage("Logomarca atualizada com sucesso!");
         }
       } catch (error) {
         console.error("Failed to update logo:", error);
-        alert("Failed to update logo: " + error.message);
+        showMessage("Falha ao atualizar logomarca: " + error.message, "error");
       } finally {
         uploading.value.logo = false;
       }
@@ -249,17 +482,20 @@ export default {
             banner: newBanner.value.name,
           });
           store.value.banner = newBanner.value.name;
-          alert("Banner updated successfully!");
+          showMessage("Banner atualizado com sucesso!");
         }
       } catch (error) {
         console.error("Failed to update banner:", error);
-        alert("Failed to update banner: " + error.message);
+        showMessage("Falha ao atualizar banner: " + error.message, "error");
       } finally {
         uploading.value.banner = false;
       }
     };
 
     const updateStoreInfo = async () => {
+      if (!isFormValid.value) return;
+
+      isSaving.value = true;
       try {
         // Handle logo upload if exists
         if (newLogo.value) {
@@ -279,35 +515,82 @@ export default {
           cnpj: store.value.cnpj,
         });
 
-        alert("Store updated successfully!");
+        showMessage("Loja atualizada com sucesso!");
       } catch (error) {
         console.error("Failed to update store:", error);
-        alert("Failed to update store");
+        showMessage("Falha ao atualizar informações da loja", "error");
+      } finally {
+        isSaving.value = false;
       }
     };
 
     const fetchStoreDetails = async () => {
+      isLoading.value = true;
       try {
         const response = await storesApi.getStore(props.storeId);
         store.value = response;
+        storePlaceholder.name = store.value.store.name;
+        storePlaceholder.email = store.value.store.email;
+        storePlaceholder.cnpj = store.value.store.cpf_cnpj;
+        storePlaceholder.address = store.value.store.address;
+        store.value.logo = store.value.store.logo;
+        store.value.banner = store.value.store.banner;
+        logoPreview.value = `${URL_BACKEND}/upload/images/${store.value.logo}`;
+        bannerPreview.value = `${URL_BACKEND}/upload/images/${store.value.banner}`;
+        console.log("Store details fetched successfully:", store.value.store);
       } catch (error) {
         console.error("Failed to fetch store details:", error);
+        showMessage("Falha ao carregar dados da loja", "error");
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    const clearForm = () => {
+      if (
+        confirm(
+          "Deseja realmente limpar todos os campos? As alterações não salvas serão perdidas."
+        )
+      ) {
+        fetchStoreDetails();
+        newLogo.value = null;
+        newBanner.value = null;
+        logoPreview.value = "";
+        bannerPreview.value = "";
+        showMessage("Formulário restaurado", "info");
       }
     };
 
     const goBack = () => {
-      router.go(-1);
+      if (
+        newLogo.value ||
+        newBanner.value ||
+        (store.value.name !== "" &&
+          store.value.email !== "" &&
+          store.value.cnpj !== "")
+      ) {
+        if (confirm("Deseja sair sem salvar as alterações?")) {
+          router.go(-1);
+        }
+      } else {
+        router.go(-1);
+      }
     };
 
     onMounted(fetchStoreDetails);
 
     return {
       store,
+      form,
       newLogo,
       newBanner,
       logoPreview,
       bannerPreview,
       uploading,
+      isLoading,
+      isSaving,
+      activeTab,
+      snackbar,
       rules,
       isFormValid,
       handleLogoChange,
@@ -315,9 +598,11 @@ export default {
       updateLogo,
       updateBanner,
       updateStoreInfo,
+      clearForm,
       goBack,
       palette,
       URL_BACKEND,
+      storePlaceholder,
     };
   },
 };
@@ -325,17 +610,27 @@ export default {
 
 <style scoped>
 .store-image {
-  border-radius: 8px;
-  max-width: 300px;
-  margin: 20px auto;
-  border: 1px solid #e0e0e0;
+  max-width: 100%;
+  height: 180px;
+  margin: 16px auto;
+  transition: all 0.3s ease;
+  object-fit: contain;
+  background-color: #f5f5f5;
 }
 
 .v-card {
-  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.theme--dark .store-image {
+  background-color: #424242;
 }
 
 .v-btn {
-  margin: 5px;
+  letter-spacing: 0.5px;
+}
+
+.v-overlay__scrim {
+  border-radius: 8px;
 }
 </style>

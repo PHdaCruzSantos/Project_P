@@ -571,6 +571,7 @@ export default {
       const labels = {
         RECEIVED: "Pagamento Cnfrmado",
         pending: "Pagamento Pendente",
+        OVERDUE: "Pagamento Atrasado",
         failed: "Falha no Pagamento",
       };
       return labels[status] || status;
@@ -579,6 +580,7 @@ export default {
       const colors = {
         pending: "warning",
         CONFIRMED: "success",
+        OVERDUE: "error",
         cancelled: "error",
         delivered: "info",
       };

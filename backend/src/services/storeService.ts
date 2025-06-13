@@ -98,7 +98,7 @@ const createStore = async (storeData: CreateStoreDTO) => {
         login_email: storeData.login_email,
         cpf_cnpj: storeData.cpf_cnpj,
         company_type: storeData.company_type,
-        birth_date: storeData.birth_date,
+        birth_date: new Date().toISOString(),
         phone: storeData.phone,
         mobile_phone: storeData.mobile_phone,
         site: storeData.site,

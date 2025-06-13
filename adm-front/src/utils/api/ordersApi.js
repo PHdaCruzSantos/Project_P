@@ -24,9 +24,8 @@ const getStoreOrders = async (storeId) => {
   }
 
   const data = await response.json();
-  console.log(data);
   // Ensure we always return an array
-  return Array.isArray(data) ? data : [];
+  return data;
 };
 
 const getStoreMetrics = async (storeId) => {

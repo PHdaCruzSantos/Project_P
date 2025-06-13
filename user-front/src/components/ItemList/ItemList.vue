@@ -100,7 +100,7 @@ export default {
     const itemsPerPage = ref(12);
     const selectedCategory = ref(null);
     const categories = ref(["Todas", "Electronics", "Clothing", "Books"]);
-    const sortBy = ref("active");
+    const sortBy = ref("Ativos");
     const sortOptions = [
       "Todas",
       "Ordem de Preço Crescente",

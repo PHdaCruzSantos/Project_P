@@ -20,8 +20,9 @@
               x-large
               :color="palette.brand.main"
               elevation="2"
-              class="text-h6 px-4 py-2"
+              class="text-h6"
               @click="navigateToRegister"
+              variant="outlined"
             >
               Comece Sua História de Sucesso
             </v-btn>

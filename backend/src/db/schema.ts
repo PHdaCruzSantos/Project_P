@@ -315,6 +315,10 @@ export const ordersTable = sqliteTable("orders", {
   shipping_price: real("shipping_price").notNull(), // Valor do frete
   tracking_code: text("tracking_code"), // Código de rastreamento
   notes: text("notes"), // Observações do pedido
+  nfe_id: text("nfe_id"),
+  nfe_number: text("nfe_number"),
+  nfe_status: text("nfe_status"),
+  nfe_url: text("nfe_url"),
   created_at: integer("created_at", { mode: "timestamp" }).notNull(),
   updated_at: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

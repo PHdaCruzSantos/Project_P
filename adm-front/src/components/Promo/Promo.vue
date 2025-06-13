@@ -21,7 +21,7 @@
             @click="createCoupon"
             prepend-icon="mdi-plus"
           >
-            Novo Cupo
+            Novo Cupon
           </v-btn>
         </template>
         <span>Criar novo Cupon de desconto</span>

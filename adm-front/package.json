@@ -19,15 +19,18 @@
     "drizzle-orm": "^0.34.1",
     "express": "^4.21.1",
     "module-alias": "^2.2.3",
+    "papaparse": "^5.5.2",
     "pinia": "^2.2.6",
     "vue": "^3.4.37",
     "vue-clerk": "^0.7.0",
+    "vue-papa-parse": "^3.1.0",
     "vue-router": "^4.4.5",
     "vuetify": "^3.7.2"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.7.5",
+    "@types/papaparse": "^5.3.15",
     "@vitejs/plugin-vue": "^5.1.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",

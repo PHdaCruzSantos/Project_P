@@ -3,7 +3,7 @@
     <v-row>
       <v-col>
         <v-btn color="primary" @click="showAddStoreDialog = true"
-          >Add Store</v-btn
+          >Adicionar Loja</v-btn
         >
       </v-col>
     </v-row>
@@ -13,7 +13,7 @@
           <template v-slot:item.actions="{ item }">
             <v-btn color="blue darken-1" @click="editStore(item)">Edit</v-btn>
             <v-btn color="red darken-1" @click="deleteStore(item.id)"
-              >Delete</v-btn
+              >Excluir</v-btn
             >
           </template>
         </v-data-table>
@@ -23,7 +23,7 @@
     <v-dialog v-model="showAddStoreDialog" max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">Add Store</span>
+          <span class="headline">Adicionar Loja</span>
         </v-card-title>
         <v-card-text>
           <v-form ref="addStoreForm">
@@ -57,9 +57,11 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="showAddStoreDialog = false"
-            >Cancel</v-btn
+            >Cancelar</v-btn
           >
-          <v-btn color="blue darken-1" text @click="handleAddStore">Add</v-btn>
+          <v-btn color="blue darken-1" text @click="handleAddStore"
+            >Adicionar</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>

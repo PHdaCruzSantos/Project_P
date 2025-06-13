@@ -57,6 +57,17 @@ interface AccountResponse {
   status: string;
 }
 
+interface NFERequest {
+  customerName: string;
+  customerCpfCnpj: string;
+  customerEmail: string;
+  value: number;
+  deductionAmount?: number;
+  serviceDescription: string;
+  municipalServiceCode: string;
+  municipalServiceName: string;
+  paymentId: string;
+}
 interface WalletInfo {
   id: string;
 }
@@ -164,6 +175,30 @@ const createCustomer = async (
   }
 };
 
+const createNFE = async (nfeData: NFERequest) => {
+  try {
+    // Ajuste na URL e parâmetros conforme documentação do Asaas
+    const response = await asaasClientService.post("/invoices", {
+      customer: nfeData.customerCpfCnpj,
+      serviceDescription: nfeData.serviceDescription,
+      value: nfeData.value,
+      // Adicionar campos obrigatórios do Asaas
+      cityServiceCode: nfeData.municipalServiceCode, // Código do serviço municipal
+      description: nfeData.serviceDescription,
+      observations: `Nota fiscal referente ao pedido`,
+      taxes: {
+        retainIss: false,
+        iss: 3, // Percentual do ISS (exemplo)
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating NFE:", error.response?.data || error.message);
+    throw new Error("Failed to create NFE");
+  }
+};
+
 export default {
   asaasClientService,
   findCustomerByCpfCnpj,
@@ -171,4 +206,5 @@ export default {
   createAccount,
   getAccount,
   getAccountWallet,
+  createNFE,
 };

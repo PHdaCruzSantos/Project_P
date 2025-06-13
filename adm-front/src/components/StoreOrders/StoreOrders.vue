@@ -1,282 +1,567 @@
 <template>
-  <v-container>
+  <v-container fluid>
+    <!-- Metrics Cards Row -->
     <v-row>
-      <!-- Metrics Cards -->
-      <v-col cols="12" md="4" v-for="store in stores" :key="store.id">
-        <v-card class="metrics-card">
-          <v-card-title class="d-flex align-center">
-            {{ store.name }}
-            <v-spacer></v-spacer>
-            <v-chip :color="store.status === 'active' ? 'success' : 'warning'">
-              {{ store.status }}
-            </v-chip>
-          </v-card-title>
-          <v-card-text>
-            <v-row>
-              <v-col cols="6">
-                <div class="text-center">
-                  <div class="text-h6">Total Orders</div>
-                  <div class="text-h4">
-                    {{ store.metrics?.totalOrders || 0 }}
-                  </div>
-                </div>
-              </v-col>
-              <v-col cols="6">
-                <div class="text-center">
-                  <div class="text-h6">Revenue</div>
-                  <div class="text-h4">
-                    {{ formatCurrency(store.metrics?.totalRevenue || 0) }}
-                  </div>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <!-- Orders List -->
-      <v-col cols="12">
-        <v-card>
-          <v-card-title class="d-flex align-center">
-            Recent Orders
-            <v-spacer></v-spacer>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search orders"
-              single-line
-              hide-details
-              density="compact"
-              class="max-w-xs"
-            ></v-text-field>
-          </v-card-title>
-
-          <v-data-table
-            :headers="headers"
-            :items="processedOrders"
-            :search="search"
-            :loading="loading"
-            :items-per-page="10"
-          >
-            <!-- Order ID -->
-            <template #[`item.id`]="{ item }">
-              <div class="font-weight-medium">
-                #{{ item.raw.id.substring(0, 8) }}
-              </div>
-            </template>
-
-            <!-- Customer Info -->
-            <template #[`item.customer`]="{ item }">
-              <div class="d-flex flex-column">
-                <span class="font-weight-medium">{{
-                  item.raw.client.name
-                }}</span>
-                <span class="text-caption">{{ item.raw.client.email }}</span>
-              </div>
-            </template>
-
-            <!-- Items -->
-            <template #[`item.items`]="{ item }">
-              <div class="d-flex flex-column">
-                <div
-                  v-for="(orderItem, index) in item.raw.items"
-                  :key="index"
-                  class="mb-1"
+      <v-col cols="12" md="4" v-for="(metric, index) in metrics" :key="index">
+        <v-card
+          :class="`metrics-card ${getGradientClass(index)}`"
+          elevation="3"
+        >
+          <template v-if="loadingMetrics">
+            <v-card-text>
+              <v-skeleton-loader
+                type="article"
+                class="mx-auto"
+              ></v-skeleton-loader>
+            </v-card-text>
+          </template>
+          <template v-else>
+            <v-card-title class="d-flex justify-space-between align-center">
+              {{ metric.title }}
+              <v-icon size="24">{{ metric.icon }}</v-icon>
+            </v-card-title>
+            <v-card-text>
+              <div class="text-h4 mb-2">{{ metric.value }}</div>
+              <div class="d-flex align-center">
+                <v-icon
+                  :color="metric.trend >= 0 ? 'success' : 'error'"
+                  size="20"
+                  class="mr-1"
                 >
-                  <span class="font-weight-medium"
-                    >{{ orderItem.quantity }}x</span
-                  >
-                  {{ orderItem.item_name }}
-                </div>
-              </div>
-            </template>
-
-            <!-- Payment -->
-            <template #[`item.payment`]="{ item }">
-              <div class="d-flex flex-column">
-                <v-chip
-                  size="small"
-                  :color="getPaymentMethodColor(item.raw.payment_method)"
-                  class="mb-1"
+                  {{ metric.trend >= 0 ? "mdi-arrow-up" : "mdi-arrow-down" }}
+                </v-icon>
+                <span
+                  :class="metric.trend >= 0 ? 'success--text' : 'error--text'"
                 >
-                  {{ item.raw.payment_method.toUpperCase() }}
-                </v-chip>
-                <span class="font-weight-medium">{{
-                  formatCurrency(item.raw.total_amount)
-                }}</span>
+                  {{ Math.abs(metric.trend) }}% desde o mês passado
+                </span>
               </div>
-            </template>
-
-            <!-- Status -->
-            <template #[`item.status`]="{ item }">
-              <v-chip :color="getStatusColor(item.raw.status)" size="small">
-                {{ item.raw.status }}
-              </v-chip>
-            </template>
-
-            <!-- Date -->
-            <template #[`item.created_at`]="{ item }">
-              <div class="d-flex flex-column">
-                <span>{{ formatDate(item.raw.created_at) }}</span>
-                <span class="text-caption">{{
-                  formatTime(item.raw.created_at)
-                }}</span>
-              </div>
-            </template>
-
-            <!-- Actions -->
-            <template #actions="{ item }">
-              <v-btn
-                icon="mdi-eye"
-                size="small"
-                color="primary"
-                variant="text"
-                @click="viewOrderDetails(item.raw)"
-              ></v-btn>
-              <v-btn
-                icon="mdi-pencil"
-                size="small"
-                color="warning"
-                variant="text"
-                @click="openStatusUpdate(item.raw)"
-              ></v-btn>
-            </template>
-          </v-data-table>
+            </v-card-text>
+          </template>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- Order Details Dialog -->
-    <v-dialog v-model="showOrderDetails" max-width="800">
-      <v-card v-if="selectedOrder">
-        <v-card-title class="d-flex align-center bg-primary text-white">
-          Order Details #{{ selectedOrder.id.substring(0, 8) }}
+    <!-- Orders Management -->
+    <v-card class="mt-6 rounded-lg overflow-hidden border border-gray-200">
+      <v-card-title class="d-flex align-center bg-gray-50 py-4 px-6">
+        <div class="d-flex align-center">
+          <v-icon color="primary" class="mr-2"
+            >mdi-clipboard-list-outline</v-icon
+          >
+          <span class="text-h6 font-weight-medium">Pedidos Recentes</span>
+        </div>
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="search"
+          prepend-inner-icon="mdi-magnify"
+          label="Pesquisar pedido"
+          placeholder="Digite o código do pedido"
+          hide-details
+          density="comfortable"
+          variant="outlined"
+          class="max-w-xs mx-4"
+          bg-color="white"
+          :loading="loading"
+        ></v-text-field>
+      </v-card-title>
+
+      <v-data-table
+        :headers="headers"
+        :items="processedOrders"
+        :search="search"
+        :loading="loading"
+        :items-per-page="10"
+        class="elevation-0"
+        :loading-text="'Carregando pedidos...'"
+        :no-data-text="'Nenhum pedido encontrado'"
+      >
+        <!-- ID Column -->
+        <template v-slot:[`item.id`]="{ item }">
+          <div class="font-weight-medium text-primary">#{{ item.id }}</div>
+        </template>
+
+        <!-- Cliente Column -->
+        <template v-slot:[`item.client.name`]="{ item }">
+          <div class="d-flex align-center">
+            <v-avatar size="32" color="grey lighten-4" class="mr-2">
+              <span class="text-caption">{{
+                getInitials(item.client?.name)
+              }}</span>
+            </v-avatar>
+            <div>{{ item.client?.name }}</div>
+          </div>
+        </template>
+
+        <!-- Valor Column -->
+        <template v-slot:[`item.total_amount`]="{ item }">
+          <div class="font-weight-medium">
+            R$ {{ formatCurrency(item.total_amount) }}
+          </div>
+        </template>
+
+        <!-- Status Column -->
+        <template v-slot:[`item.status`]="{ item }">
+          <v-chip
+            :color="getStatusColor(item.status)"
+            text-color="white"
+            size="small"
+            class="px-2 text-caption text-capitalize"
+            pill
+          >
+            <v-icon size="x-small" start class="mr-1">{{
+              getStatusIcon(item.status)
+            }}</v-icon>
+            {{ item.status.toLowerCase() }}
+          </v-chip>
+        </template>
+
+        <!-- Data Column -->
+        <template v-slot:[`item.created_at`]="{ item }">
+          <div class="d-flex align-center">
+            <v-icon size="small" color="grey" class="mr-1">mdi-calendar</v-icon>
+            {{ item.created_at }}
+          </div>
+        </template>
+
+        <!-- Actions Column -->
+        <template v-slot:[`item.actions`]="{ item }">
+          <div class="d-flex justify-center">
+            <v-tooltip location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  size="small"
+                  icon
+                  color="primary"
+                  variant="text"
+                  class="mr-1"
+                  @click="openOrderDetails(item)"
+                >
+                  <v-icon>mdi-eye</v-icon>
+                </v-btn>
+              </template>
+              <div class="pa-2">Ver detalhes</div>
+            </v-tooltip>
+
+            <v-tooltip
+              location="top"
+              v-if="item.status.toLowerCase() === 'pending'"
+            >
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  size="small"
+                  icon
+                  color="success"
+                  variant="text"
+                  class="mx-1"
+                  @click="acceptOrder(item)"
+                >
+                  <v-icon>mdi-check-circle</v-icon>
+                </v-btn>
+              </template>
+              <div class="pa-2">Aceitar pedido</div>
+            </v-tooltip>
+
+            <v-tooltip
+              location="top"
+              v-if="item.status.toLowerCase() === 'confirmed'"
+            >
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  size="small"
+                  icon
+                  color="info"
+                  variant="text"
+                  class="mx-1"
+                  @click="openNfeDialog(item)"
+                >
+                  <v-icon>mdi-file-document-outline</v-icon>
+                </v-btn>
+              </template>
+              <div class="pa-2">Emitir NFe</div>
+            </v-tooltip>
+
+            <v-tooltip
+              location="top"
+              v-if="
+                ['confirmed', 'processing'].includes(item.status.toLowerCase())
+              "
+            >
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  size="small"
+                  icon
+                  color="warning"
+                  variant="text"
+                  class="mx-1"
+                  @click="openTrackingDialog(item)"
+                >
+                  <v-icon>mdi-truck-delivery</v-icon>
+                </v-btn>
+              </template>
+              <div class="pa-2">Adicionar rastreio</div>
+            </v-tooltip>
+          </div>
+        </template>
+
+        <!-- Footer -->
+        <template v-slot:bottom>
+          <div
+            class="d-flex align-center justify-space-between px-4 py-2 bg-gray-50"
+          >
+            <div class="text-caption text-secondary">
+              Total de pedidos: {{ processedOrders.length }}
+            </div>
+          </div>
+        </template>
+      </v-data-table>
+    </v-card>
+
+    <!-- NFe Dialog - Diálogo de Emissão de Nota Fiscal Eletrônica -->
+    <v-dialog v-model="nfeDialog" max-width="560px" content-class="rounded-lg">
+      <v-card class="rounded-lg">
+        <v-toolbar
+          density="comfortable"
+          color="primary"
+          dark
+          class="rounded-t-lg"
+        >
+          <v-icon start class="mx-4">mdi-file-document-outline</v-icon>
+          <v-toolbar-title>Emissão de Nota Fiscal Eletrônica</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon size="small" @click="nfeDialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-toolbar>
+
+        <v-card-text class="pa-6">
+          <div class="text-subtitle-2 mb-4 text-grey-darken-1">
+            <div class="d-flex align-center mb-2">
+              <v-icon color="grey" size="small" class="mr-2"
+                >mdi-shopping-outline</v-icon
+              >
+              <span
+                >Pedido: <strong>#{{ selectedOrder?.id }}</strong></span
+              >
+            </div>
+            <div class="d-flex align-center">
+              <v-icon color="grey" size="small" class="mr-2"
+                >mdi-account-outline</v-icon
+              >
+              <span
+                >Cliente:
+                <strong>{{ selectedOrder?.client?.name }}</strong></span
+              >
+            </div>
+          </div>
+
+          <v-divider class="mb-6"></v-divider>
+
+          <v-form ref="nfeForm" v-model="nfeFormValid">
+            <v-row>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="nfeData.series"
+                  label="Série da NFe"
+                  placeholder="Ex: 1"
+                  hint="Série de emissão do documento fiscal"
+                  persistent-hint
+                  required
+                  :rules="[(v) => !!v || 'Série é obrigatória']"
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-identifier"
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="nfeData.number"
+                  label="Número da NFe"
+                  placeholder="Ex: 000001234"
+                  hint="Número do documento fiscal"
+                  persistent-hint
+                  required
+                  :rules="[(v) => !!v || 'Número é obrigatório']"
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-numeric"
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12">
+                <v-select
+                  v-model="nfeData.natureOperation"
+                  :items="[
+                    'Venda de mercadorias',
+                    'Venda de serviços',
+                    'Devolução',
+                    'Remessa para demonstração',
+                  ]"
+                  label="Natureza da Operação"
+                  required
+                  :rules="[(v) => !!v || 'Natureza da operação é obrigatória']"
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-tag-outline"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12">
+                <v-textarea
+                  v-model="nfeData.observations"
+                  label="Observações"
+                  placeholder="Informações adicionais para a nota fiscal"
+                  rows="3"
+                  auto-grow
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-text-box-outline"
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions class="pa-4 bg-grey-lighten-4">
+          <v-btn
+            variant="outlined"
+            color="grey"
+            @click="nfeDialog = false"
+            prepend-icon="mdi-close"
+          >
+            Cancelar
+          </v-btn>
           <v-spacer></v-spacer>
           <v-btn
-            icon="mdi-close"
-            variant="text"
-            color="white"
-            @click="showOrderDetails = false"
-          ></v-btn>
-        </v-card-title>
-
-        <v-card-text class="pa-4">
-          <v-row>
-            <!-- Customer Information -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined" class="mb-4">
-                <v-card-title class="text-subtitle-1"
-                  >Customer Information</v-card-title
-                >
-                <v-card-text>
-                  <div class="d-flex flex-column gap-2">
-                    <div>
-                      <div class="text-caption">Name</div>
-                      <div class="font-weight-medium">
-                        {{ selectedOrder.client.name }}
-                      </div>
-                    </div>
-                    <div>
-                      <div class="text-caption">Email</div>
-                      <div>{{ selectedOrder.client.email }}</div>
-                    </div>
-                  </div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-
-            <!-- Shipping Information -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined" class="mb-4">
-                <v-card-title class="text-subtitle-1"
-                  >Shipping Information</v-card-title
-                >
-                <v-card-text>
-                  <div class="d-flex flex-column gap-2">
-                    <div>
-                      <div class="text-caption">Address</div>
-                      <div>{{ selectedOrder.shipping_address }}</div>
-                    </div>
-                    <div>
-                      <div class="text-caption">Tracking Code</div>
-                      <div>
-                        {{ selectedOrder.tracking_code || "Not available" }}
-                      </div>
-                    </div>
-                  </div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-
-            <!-- Order Items -->
-            <v-col cols="12">
-              <v-card variant="outlined">
-                <v-card-title class="text-subtitle-1">Order Items</v-card-title>
-                <v-card-text>
-                  <v-table density="comfortable">
-                    <thead>
-                      <tr>
-                        <th scope="col" class="text-right">Item</th>
-                        <th scope="col" class="text-right">Quantity</th>
-                        <th scope="col" class="text-right">Price</th>
-                        <th scope="col" class="text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="item in selectedOrder.items" :key="item.id">
-                        <td>{{ item.item_name }}</td>
-                        <td class="text-right">{{ item.quantity }}</td>
-                        <td class="text-right">
-                          {{ formatCurrency(item.price) }}
-                        </td>
-                        <td class="text-right">
-                          {{ formatCurrency(item.price * item.quantity) }}
-                        </td>
-                      </tr>
-                      <tr class="grey lighten-4">
-                        <td colspan="3" class="text-right font-weight-bold">
-                          Shipping
-                        </td>
-                        <td class="text-right">
-                          {{ formatCurrency(selectedOrder.shipping_price) }}
-                        </td>
-                      </tr>
-                      <tr class="grey lighten-4">
-                        <td colspan="3" class="text-right font-weight-bold">
-                          Total
-                        </td>
-                        <td class="text-right font-weight-bold">
-                          {{ formatCurrency(selectedOrder.total_amount) }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card-text>
+            color="primary"
+            variant="elevated"
+            @click="emitNfe"
+            prepend-icon="mdi-check"
+            :loading="loading"
+            :disabled="!nfeFormValid"
+          >
+            Emitir NFe
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- Status Update Dialog -->
-    <v-dialog v-model="showStatusUpdate" max-width="400">
-      <v-card>
-        <v-card-title>Update Order Status</v-card-title>
-        <v-card-text>
-          <v-select
-            v-model="newStatus"
-            :items="statusOptions"
-            label="Select Status"
-            required
-          ></v-select>
-        </v-card-text>
-        <v-card-actions>
+    <!-- Tracking Dialog - Diálogo de Adição de Código de Rastreio -->
+    <v-dialog
+      v-model="trackingDialog"
+      max-width="560px"
+      content-class="rounded-lg"
+    >
+      <v-card class="rounded-lg">
+        <v-toolbar
+          density="comfortable"
+          color="warning"
+          dark
+          class="rounded-t-lg"
+        >
+          <v-icon start class="mx-4">mdi-truck-delivery</v-icon>
+          <v-toolbar-title>Adicionar Código de Rastreio</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="showStatusUpdate = false"
-            >Cancel</v-btn
+          <v-btn icon size="small" @click="trackingDialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-toolbar>
+
+        <v-card-text class="pa-6">
+          <div class="mb-4">
+            <v-chip
+              :color="getStatusColor(selectedOrder?.status)"
+              text-color="white"
+              size="small"
+              class="mb-2"
+            >
+              <v-icon start size="x-small">{{
+                getStatusIcon(selectedOrder?.status)
+              }}</v-icon>
+              {{ selectedOrder?.status?.toLowerCase() }}
+            </v-chip>
+
+            <div
+              class="d-flex flex-column gap-1 mt-2 text-subtitle-2 text-grey-darken-1"
+            >
+              <div class="d-flex align-center">
+                <v-icon color="grey" size="small" class="mr-2"
+                  >mdi-shopping-outline</v-icon
+                >
+                <span
+                  >Pedido: <strong>{{ selectedOrder?.id }}</strong></span
+                >
+              </div>
+              <div class="d-flex align-center">
+                <v-icon color="grey" size="small" class="mr-2"
+                  >mdi-account-outline</v-icon
+                >
+                <span
+                  >Cliente:
+                  <strong>{{ selectedOrder?.client?.name }}</strong></span
+                >
+              </div>
+              <div class="d-flex align-center">
+                <v-icon color="grey" size="small" class="mr-2"
+                  >mdi-currency-usd</v-icon
+                >
+                <span
+                  >Valor:
+                  <strong
+                    >R$
+                    {{ formatCurrency(selectedOrder?.total_amount) }}</strong
+                  ></span
+                >
+              </div>
+            </div>
+          </div>
+
+          <v-divider class="mb-6"></v-divider>
+
+          <v-form ref="trackingForm" v-model="trackingFormValid">
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                  v-model="trackingData.carrier"
+                  :items="carriers"
+                  label="Transportadora"
+                  placeholder="Selecione a transportadora"
+                  hint="Empresa responsável pela entrega"
+                  persistent-hint
+                  required
+                  :rules="[(v) => !!v || 'Transportadora é obrigatória']"
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-truck"
+                  menu-icon="mdi-menu-down"
+                >
+                  <template v-slot:selection="{ item }">
+                    <div class="d-flex align-center">
+                      <v-icon
+                        :color="getCarrierColor(item.value)"
+                        class="mr-2"
+                        size="small"
+                      >
+                        {{ getCarrierIcon(item.value) }}
+                      </v-icon>
+                      {{ item.value }}
+                    </div>
+                  </template>
+                  <template v-slot:item="{ item, props }">
+                    <v-list-item
+                      v-bind="props"
+                      :title="item.value"
+                      :prepend-icon="getCarrierIcon(item.value)"
+                      :prepend-icon-color="getCarrierColor(item.value)"
+                    ></v-list-item>
+                  </template>
+                </v-select>
+              </v-col>
+
+              <v-col cols="12">
+                <v-text-field
+                  v-model="trackingData.code"
+                  label="Código de Rastreio"
+                  placeholder="Ex: BR12345678901234"
+                  hint="Código para rastreamento do pedido"
+                  persistent-hint
+                  required
+                  :rules="[(v) => !!v || 'Código de rastreio é obrigatório']"
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-barcode-scan"
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12">
+                <v-menu
+                  v-model="menu"
+                  :close-on-content-click="false"
+                  location="bottom"
+                  transition="scale-transition"
+                  min-width="auto"
+                >
+                  <template v-slot:activator="{ props }">
+                    <v-text-field
+                      v-model="trackingData.estimatedDelivery"
+                      label="Previsão de Entrega"
+                      prepend-inner-icon="mdi-calendar"
+                      readonly
+                      v-bind="props"
+                      variant="outlined"
+                      bg-color="grey-lighten-4"
+                      density="comfortable"
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker
+                    v-model="trackingData.estimatedDelivery"
+                    @update:model-value="menu = false"
+                  ></v-date-picker>
+                </v-menu>
+              </v-col>
+
+              <v-col cols="12">
+                <v-textarea
+                  v-model="trackingData.observations"
+                  label="Observações"
+                  placeholder="Informações adicionais sobre a entrega"
+                  rows="2"
+                  auto-grow
+                  variant="outlined"
+                  bg-color="grey-lighten-4"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-text-box-outline"
+                ></v-textarea>
+              </v-col>
+
+              <v-col cols="12">
+                <v-switch
+                  v-model="trackingData.notifyCustomer"
+                  color="success"
+                  label="Notificar cliente sobre o código de rastreio"
+                  hint="Um e-mail será enviado ao cliente com as informações de rastreio"
+                  persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions class="pa-4 bg-grey-lighten-4">
+          <v-btn
+            variant="outlined"
+            color="grey"
+            @click="trackingDialog = false"
+            prepend-icon="mdi-close"
           >
-          <v-btn color="primary" @click="updateStatus">Save</v-btn>
+            Cancelar
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="warning"
+            variant="elevated"
+            @click="saveTracking"
+            prepend-icon="mdi-send"
+            :loading="loading"
+            :disabled="!trackingFormValid"
+          >
+            Salvar e Enviar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -284,185 +569,349 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeMount } from "vue";
+import palette from "../../../palette";
+import ordersApi from "../../utils/api/ordersApi"; // Importe a API de pedidos
+import storesApi from "../../utils/api/stores"; // Importe a API de lojas
 import { useUserStore } from "@/stores/useStore";
-import ordersApi from "@/utils/api/ordersApi";
-import storesApi from "@/utils/api/stores";
+
+import {
+  VContainer,
+  VCard,
+  VCardTitle,
+  VCardText,
+  VAvatar,
+  VSkeletonLoader,
+  VRow,
+  VCol,
+  VIcon,
+  VImg,
+  VBtn,
+  VForm,
+  VTextField,
+  VFileInput,
+  VDataTable,
+  VChip,
+  VTooltip,
+  VDialog,
+  VSelect,
+  VTextarea,
+  VSwitch,
+  VMenu,
+  VDatePicker,
+  VToolbar,
+  VToolbarTitle,
+  VToolbarItems,
+} from "vuetify/components";
 
 export default {
   name: "StoreOrders",
+  components: {
+    VContainer,
+    VCard,
+    VCardTitle,
+    VCardText,
+    VAvatar,
+    VSkeletonLoader,
+    VRow,
+    VCol,
+    VIcon,
+    VImg,
+    VBtn,
+    VForm,
+    VTextField,
+    VFileInput,
+    VDataTable,
+    VChip,
+    VTooltip,
+    VDialog,
+    VSelect,
+    VTextarea,
+    VSwitch,
+    VMenu,
+    VDatePicker,
+    VToolbar,
+    VToolbarTitle,
+    VToolbarItems,
+  },
   setup() {
-    const userStore = useUserStore();
+    const userStore = useUserStore(); // Store de usuário
     const loading = ref(false);
-    const stores = ref([]);
+    const loadingMetrics = ref(true); // Skeleton para métricas
     const search = ref("");
-    const showOrderDetails = ref(false);
-    const showStatusUpdate = ref(false);
+    const nfeDialog = ref(false);
+    const trackingDialog = ref(false);
     const selectedOrder = ref(null);
-    const newStatus = ref("");
+    const orders = ref([]); // Armazenar os pedidos da loja
+    const stores = ref([]); // Armazenar as lojas do usuário
 
-    const headers = [
-      { title: "Order ID", key: "id", width: "120" },
-      { title: "Customer", key: "customer" },
-      { title: "Items", key: "items" },
-      { title: "Payment", key: "payment", width: "150" },
-      { title: "Status", key: "status", width: "120" },
-      { title: "Date", key: "created_at", width: "150" },
-      { title: "Actions", key: "actions", width: "100", sortable: false },
-    ];
+    const nfeFormValid = ref(false);
+    const trackingFormValid = ref(false);
+    const menu = ref(false);
 
-    const statusOptions = [
-      "pending",
-      "processing",
-      "confirmed",
-      "shipped",
-      "delivered",
-      "cancelled",
-    ];
+    const nfeData = ref({});
+    const trackingData = ref({});
 
-    const processedOrders = computed(() => {
-      const allOrders = stores.value.reduce((acc, store) => {
-        if (store.orders?.data) {
-          return [...acc, ...store.orders.data];
-        }
-        return acc;
-      }, []);
+    nfeData.value = {
+      series: "",
+      number: "",
+      natureOperation: "",
+      observations: "",
+    };
 
-      return allOrders;
-    });
-
-    const getStatusColor = (status) => {
-      const colors = {
-        pending: "warning",
-        processing: "info",
-        confirmed: "success",
-        shipped: "purple",
-        delivered: "green",
-        cancelled: "error",
+    // Dados adicionais para rastreio
+    trackingData.value = {
+      carrier: "",
+      code: "",
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .substr(0, 10), // 7 dias a partir de hoje
+      observations: "",
+      notifyCustomer: true,
+    };
+    const getCarrierIcon = (carrier) => {
+      const icons = {
+        Correios: "mdi-mail",
+        JadLog: "mdi-truck-fast",
+        "Total Express": "mdi-package-variant",
+        DHL: "mdi-airplane",
+        FedEx: "mdi-package-variant-closed",
       };
-      return colors[status?.toLowerCase()] || "grey";
+      return icons[carrier] || "mdi-truck-delivery";
     };
 
-    const getPaymentMethodColor = (method) => {
+    const getCarrierColor = (carrier) => {
       const colors = {
-        pix: "success",
-        credit: "primary",
-        debit: "info",
-        boleto: "warning",
+        Correios: "yellow-darken-3",
+        JadLog: "green-darken-1",
+        "Total Express": "blue-darken-1",
+        DHL: "red-darken-1",
+        FedEx: "purple-darken-1",
       };
-      return colors[method] || "grey";
+      return colors[carrier] || "grey";
     };
 
-    const formatCurrency = (value) => {
-      return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }).format(value || 0);
-    };
+    const carriers = ["Correios", "JadLog", "Total Express", "DHL", "FedEx"];
 
-    const formatDate = (date) => {
-      if (!date) return "N/A";
-      return new Date(date).toLocaleDateString("pt-BR");
-    };
-
-    const formatTime = (date) => {
-      if (!date) return "";
-      return new Date(date).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
-
-    const loadData = async () => {
+    const fetchStoresAndOrders = async () => {
       try {
         loading.value = true;
+        // Primeiro, buscar todas as lojas do usuário
         const userStores = await storesApi.getStores(userStore.user.id);
+        stores.value = userStores;
 
-        const storesWithOrders = await Promise.all(
+        // Em seguida, buscar os pedidos de cada loja
+        const allOrders = await Promise.all(
           userStores.map(async (store) => {
-            try {
-              const orders = await ordersApi.getStoreOrders(store.id);
-              const metrics = {
-                totalOrders: orders.total || 0,
-                totalRevenue:
-                  orders.data?.reduce(
-                    (sum, order) => sum + order.total_amount,
-                    0
-                  ) || 0,
-              };
-
-              return {
-                ...store,
-                metrics,
-                orders,
-              };
-            } catch (error) {
-              console.error(`Error loading data for store ${store.id}:`, error);
-              return {
-                ...store,
-                metrics: { totalOrders: 0, totalRevenue: 0 },
-                orders: { data: [], total: 0 },
-              };
-            }
+            const storeOrders = await ordersApi.getStoreOrders(store.id);
+            return storeOrders.data.map((order) => ({
+              ...order,
+              store_name: store.name, // Adicionar o nome da loja aos dados do pedido
+              store_id: store.id,
+            }));
           })
         );
 
-        stores.value = storesWithOrders;
+        // Transformar o array de arrays em um único array de pedidos
+        orders.value = allOrders.flat();
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.error("Erro ao buscar lojas e pedidos:", error);
       } finally {
         loading.value = false;
       }
     };
 
-    const viewOrderDetails = (order) => {
-      selectedOrder.value = order;
-      showOrderDetails.value = true;
+    const metrics = [
+      {
+        title: "Total de Pedidos",
+        value: "1,234",
+        trend: 12.5,
+        icon: "mdi-shopping",
+        gradient: "primary",
+      },
+      {
+        title: "Receita Total",
+        value: "R$ 45.678",
+        trend: 8.3,
+        icon: "mdi-currency-brl",
+        gradient: "success",
+      },
+      {
+        title: "Ticket Médio",
+        value: "R$ 186",
+        trend: -2.1,
+        icon: "mdi-chart-line",
+        gradient: "info",
+      },
+    ];
+
+    const headers = [
+      { text: "Pedido", value: "id", width: "450px" },
+      { text: "Cliente", value: "client.name", width: "80px" }, // Exibir o nome do cliente
+      { text: "Valor", value: "total_amount" },
+      { text: "Status", value: "status", width: "100px" },
+      { text: "Data", value: "created_at", width: "150px" },
+      { text: "Ações", value: "actions", sortable: false, width: "150px" },
+    ];
+
+    // Processar os pedidos para exibição na tabela
+    const processedOrders = computed(() => {
+      return orders.value.map((order) => ({
+        ...order,
+        created_at: order.created_at
+          ? new Date(order.created_at).toLocaleDateString()
+          : "N/A", // Formatar a data
+      }));
+    });
+
+    const getInitials = (name) => {
+      if (!name) return "?";
+      return name
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
     };
 
-    const openStatusUpdate = (order) => {
-      selectedOrder.value = order;
-      newStatus.value = order.status.toLowerCase();
-      showStatusUpdate.value = true;
+    const formatCurrency = (value) => {
+      if (!value) return "0,00";
+      return Number(value).toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
     };
 
-    const updateStatus = async () => {
+    const getStatusIcon = (status) => {
+      const icons = {
+        pending: "mdi-clock-outline",
+        processing: "mdi-cog-outline",
+        confirmed: "mdi-check-circle-outline",
+        shipped: "mdi-truck-fast",
+        delivered: "mdi-package-variant-closed-check",
+        cancelled: "mdi-close-circle-outline",
+      };
+      return icons[status?.toLowerCase()] || "mdi-help-circle-outline";
+    };
+
+    const getGradientClass = (index) => {
+      const classes = ["gradient-primary", "gradient-success", "gradient-info"];
+      return classes[index % classes.length];
+    };
+
+    const getStatusColor = (status) => {
+      const colors = {
+        pending: palette.warning[300],
+        processing: palette.skyblue[300],
+        confirmed: palette.success[300],
+        shipped: palette.royalblue[300],
+        delivered: palette.teal[300],
+        cancelled: palette.danger[300],
+      };
+      return colors[status?.toLowerCase()] || palette.slategray[300];
+    };
+
+    const openNfeDialog = (order) => {
+      selectedOrder.value = order;
+      nfeDialog.value = true;
+    };
+
+    const openTrackingDialog = (order) => {
+      selectedOrder.value = order;
+      trackingDialog.value = true;
+    };
+
+    const emitNfe = async () => {
       try {
         loading.value = true;
-        await ordersApi.updateOrderStatus(
-          selectedOrder.value.id,
-          newStatus.value
-        );
-        await loadData(); // Reload data
-        showStatusUpdate.value = false;
+        // Aqui virá a integração com a API de emissão de NFe
+        console.log("Emitindo NFe:", {
+          order: selectedOrder.value,
+          nfeData: nfeData.value,
+        });
+        // Atualizar status do pedido
+        nfeDialog.value = false;
       } catch (error) {
-        console.error("Error updating status:", error);
+        console.error("Erro ao emitir NFe:", error);
       } finally {
         loading.value = false;
       }
     };
 
-    onMounted(loadData);
+    const saveTracking = async () => {
+      try {
+        loading.value = true;
+        // Aqui virá a integração com a API de tracking
+        console.log("Salvando tracking:", {
+          order: selectedOrder.value,
+          trackingData: trackingData.value,
+        });
+        // Atualizar status do pedido
+        trackingDialog.value = false;
+      } catch (error) {
+        console.error("Erro ao salvar tracking:", error);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const acceptOrder = async (order) => {
+      try {
+        loading.value = true;
+        // Aqui virá a integração com a API de aceitação de pedido
+        console.log("Aceitando pedido:", order);
+        // Atualizar status do pedido
+      } catch (error) {
+        console.error("Erro ao aceitar pedido:", error);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // Buscar os pedidos da loja quando o componente for montado
+    onMounted(async () => {
+      try {
+        loading.value = true;
+        fetchStoresAndOrders();
+      } catch (error) {
+        console.error("Erro ao buscar pedidos da loja:", error);
+      } finally {
+        loading.value = false;
+      }
+    });
+
+    // onBeforeMount(fetchStoresAndOrders);
 
     return {
       loading,
-      stores,
-      processedOrders,
+      loadingMetrics,
       search,
+      metrics,
       headers,
-      statusOptions,
-      showOrderDetails,
-      showStatusUpdate,
-      selectedOrder,
-      newStatus,
+      nfeDialog,
+      trackingDialog,
+      nfeData,
+      trackingData,
+      carriers,
+      processedOrders, // Pedidos processados para exibição
+      getGradientClass,
       getStatusColor,
-      getPaymentMethodColor,
+      openNfeDialog,
+      openTrackingDialog,
+      emitNfe,
+      saveTracking,
+      acceptOrder,
+
+      getInitials,
       formatCurrency,
-      formatDate,
-      formatTime,
-      viewOrderDetails,
-      openStatusUpdate,
-      updateStatus,
+      getStatusIcon,
+
+      nfeFormValid,
+      trackingFormValid,
+      menu,
+      getCarrierIcon,
+      getCarrierColor,
+      selectedOrder,
     };
   },
 };
@@ -470,12 +919,69 @@ export default {
 
 <style scoped>
 .metrics-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
   transition: transform 0.2s;
+  border-radius: 12px;
 }
 
 .metrics-card:hover {
   transform: translateY(-5px);
+}
+
+.gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--v-primary-base) 0%,
+    var(--v-primary-darken1) 100%
+  );
+  color: white;
+}
+
+.gradient-success {
+  background: linear-gradient(
+    135deg,
+    var(--v-success-base) 0%,
+    var(--v-success-darken1) 100%
+  );
+  color: white;
+}
+
+.gradient-info {
+  background: linear-gradient(
+    135deg,
+    var(--v-info-base) 0%,
+    var(--v-info-darken1) 100%
+  );
+  color: white;
+}
+
+.v-data-table {
+  border-radius: 12px;
+}
+:deep(.v-data-table) {
+  font-size: 14px;
+}
+
+:deep(.v-data-table-header) {
+  background-color: #f8fafc;
+}
+
+:deep(.v-data-table-header th) {
+  font-weight: 600 !important;
+  color: #475569 !important;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+:deep(.v-data-table .v-data-table__tr:hover) {
+  background-color: #f1f5f9;
+}
+
+:deep(.v-data-table tbody tr) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+:deep(.v-data-table tbody tr:last-child) {
+  border-bottom: none;
 }
 </style>

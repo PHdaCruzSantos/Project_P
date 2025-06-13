@@ -1,0 +1,16 @@
+nome,descricao,preco,tipo,categoria,status
+X-Burger Especial,Hambúrguer artesanal com queijo cheddar e bacon,29.90,food,Lanches,active
+Coca-Cola 350ml,Refrigerante Coca-Cola lata,5.90,drink,Bebidas,active
+Pudim de Leite,Pudim caseiro com calda de caramelo,12.50,dessert,Sobremesas,active
+Pastel de Frango,Pastel crocante recheado com frango e catupiry,8.90,food,Lanches,active
+Suco de Laranja Natural,Suco de laranja natural 500ml,9.90,drink,Bebidas,active
+Brownie com Sorvete,Brownie caseiro com sorvete de creme,15.90,dessert,Sobremesas,active
+Hot Dog Completo,Cachorro quente com todos os complementos,18.90,food,Lanches,active
+Água Mineral 500ml,Água mineral sem gás,4.50,drink,Bebidas,active
+Milkshake de Chocolate,Milkshake cremoso de chocolate com chantilly,16.90,dessert,Sobremesas,active
+Batata Frita Grande,Porção de batata frita crocante com molhos,19.90,food,Lanches,active
+Cerveja Long Neck,Cerveja Heineken long neck 330ml,12.90,drink,Bebidas,active
+Cheesecake,Cheesecake de frutas vermelhas,14.90,dessert,Sobremesas,active
+Coxinha de Frango,Coxinha grande recheada com frango desfiado,7.90,food,Lanches,active
+Chá Gelado de Pêssego,Chá gelado sabor pêssego 500ml,8.90,drink,Bebidas,active
+Mousse de Maracujá,Mousse caseiro de maracujá com calda,11.90,dessert,Sobremesas,active
